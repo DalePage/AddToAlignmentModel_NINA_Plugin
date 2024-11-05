@@ -93,7 +93,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems
                     if (!sync) {
                         throw new SequenceEntityFailedException(Loc.Instance["LblSyncFailed"]);
                     }
-                    string addAlignmentResponse = telescopeMediator.Action("AddAlignmentReference", $"{result.Coordinates.RADegrees}:{result.Coordinates.Dec}");
+                    string addAlignmentResponse = telescopeMediator.Action("Telescope:AddAlignmentReference", $"{result.Coordinates.RA}:{result.Coordinates.Dec}");
                 }
             } finally {
                 service.DelayedClose(TimeSpan.FromSeconds(10));

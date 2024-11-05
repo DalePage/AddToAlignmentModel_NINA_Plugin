@@ -1,4 +1,5 @@
-﻿using ADPUK.NINA.AddToAlignmentModel.Properties;
+﻿using ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems;
+using ADPUK.NINA.AddToAlignmentModel.Properties;
 using ASCOM.Com.DriverAccess;
 using Newtonsoft.Json;
 using NINA.Astrometry;
@@ -68,8 +69,8 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelTestCategory {
         ///     - IList<IDateTimeProvider>
         /// </remarks>
 
-        private readonly ITelescopeMediator telescopeMediator;
-        private readonly IProfileService profileService;
+        private  ITelescopeMediator telescopeMediator;
+        private  IProfileService profileService;
         private bool hasSynced = false;
 
         [ImportingConstructor]
@@ -78,7 +79,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelTestCategory {
             this.telescopeMediator = telescopeMediator;
         }
         public AddToAlignmentModelInstruction() { }
-        public AddToAlignmentModelInstruction(AddToAlignmentModelInstruction copyMe) : this() {
+        public AddToAlignmentModelInstruction(AddToAlignmentModelInstruction copyMe) : this( copyMe.profileService, copyMe.telescopeMediator) {
             CopyMetaData(copyMe);
         }
 
@@ -102,14 +103,13 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelTestCategory {
             var scope = telescopeMediator.GetDevice();
             if (scope != null && scope.Connected) {
                 Coordinates currentTarget = telescopeMediator.GetCurrentPosition();
-                string addAlignmentRespose = telescopeMediator.Action("AddAlignmentReference", $"{currentTarget.RA}:{currentTarget.Dec}");
+                string addAlignmentRespose = telescopeMediator.Action("Telescope:AddAlignmentReference", $"{currentTarget.RA}:{currentTarget.Dec}");
                 Notification.ShowSuccess("Target sent to scope alignment model");
             } else {
                 Notification.ShowWarning("Scope not connected");
             }
             return Task.CompletedTask;
         }
-
         /// <summary>
         /// When items are put into the sequence via the factory, the factory will call the clone method. Make sure all the relevant fields are cloned with the object.
         /// </summary>
