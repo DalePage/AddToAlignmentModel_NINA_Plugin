@@ -24,6 +24,7 @@ using NINA.Astrometry;
 using NINA.Core.Utility.Notification;
 using System.Windows;
 using NINA.Equipment.Equipment.MyTelescope;
+using System.Text.Json;
 
 namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
     [ExportMetadata("Name", "Create Alignement Model")]
@@ -44,12 +45,24 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         private int _numberOfAltitudePoints;
         private double _maxElevation;
         private double _minElevation;
-        private string _completedDisplay;
+        private int _stepCount;
+        private bool _isReadOnly;
 
-        public string completedDisplay {
-            get { return _completedDisplay ?? "0/0"; }
+        public bool isReadOnly {
+            get { return _isReadOnly; }
             set {
-                _completedDisplay = value;
+                _isReadOnly = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        public int total_Steps {
+            get { return _numberOfAltitudePoints + _numberOfAzimuthPoints; }
+        }
+        public int stepCount {
+            get { return _stepCount; }
+            set {
+                _stepCount = value;
                 RaisePropertyChanged();
             }
         }
@@ -59,6 +72,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
             get { return _numberOfAzimuthPoints; }
             set {
                 _numberOfAzimuthPoints = value;
+                RaisePropertyChanged("total_Steps");
                 RaisePropertyChanged();
             }
         }
@@ -68,6 +82,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
             get { return _numberOfAltitudePoints; }
             set {
                 _numberOfAltitudePoints = value;
+                RaisePropertyChanged("total_Steps");
                 RaisePropertyChanged();
             }
         }
@@ -141,9 +156,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         }
 
         public override async Task Execute(IProgress<ApplicationStatus> progress, CancellationToken token) {
-            int stepCount = 0;
-            int totalSteps = numberOfAltitudePoints + numberOfAzimuthPoints;
-            completedDisplay = $"{stepCount}/{totalSteps}";
+            isReadOnly = true;
             IWindowService service = windowServiceFactory.Create();
             progress = PlateSolveStatusVM.CreateLinkedProgress(progress);
             service.Show(PlateSolveStatusVM, Loc.Instance["Lbl_SequenceItem_Platesolving_SolveAndSync_Name"], System.Windows.ResizeMode.CanResize, System.Windows.WindowStyle.ToolWindow);
@@ -200,6 +213,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                 }
             } finally {
                 service.DelayedClose(new TimeSpan(0, 0, 10));
+                isReadOnly = false;
             }
 
         }

@@ -19,7 +19,8 @@
                         <TextBox
                         MinWidth="20"
                         Margin="5,0,0,0"
-                        TextAlignment="Right">
+                        TextAlignment="Right"
+                        IsReadOnly="{Binding isReadOnly}">
                             <TextBox.Text>
                                 <Binding Path="numberOfAzimuthPoints" UpdateSourceTrigger="LostFocus" />
                             </TextBox.Text>
@@ -28,7 +29,8 @@
                         <TextBox
                         MinWidth="20"
                         Margin="5,0,0,0"
-                        TextAlignment="Right">
+                        TextAlignment="Right"
+                        IsReadOnly="{Binding isReadOnly}">
                             <TextBox.Text>
                                 <Binding Path="numberOfAltitudePoints"  UpdateSourceTrigger="LostFocus" />
                             </TextBox.Text>
@@ -37,7 +39,8 @@
                         <TextBox
                         MinWidth="20"
                         Margin="5,0,0,0"
-                        TextAlignment="Right">
+                        TextAlignment="Right"
+                        IsReadOnly="{Binding isReadOnly}">
                             <TextBox.Text>
                                 <Binding Path="minElevation" UpdateSourceTrigger="LostFocus" />
                             </TextBox.Text>
@@ -46,7 +49,8 @@
                         <TextBox
                         MinWidth="20"
                         Margin="5,0,0,0"
-                        TextAlignment="Right">
+                        TextAlignment="Right"
+                        IsReadOnly="{Binding isReadOnly}">
                             <TextBox.Text>
                                 <Binding Path="maxElevation"  UpdateSourceTrigger="LostFocus" />
                             </TextBox.Text>
@@ -54,7 +58,10 @@
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
                         <TextBlock TextAlignment="Right" Text="  Completed: "/>
-                        <TextBlock TextAlignment="Left" Text="{Binding completedDisplay}" />
+                        <TextBlock TextAlignment="Left" Text="{Binding stepCount}" />
+                        <TextBlock TextAlignment="Left" Text="/" />
+                        <TextBlock TextAlignment="Left" Text="{Binding total_Steps}" />
+
                     </StackPanel>
                 </StackPanel>
             </view:SequenceBlockView.SequenceItemContent>
