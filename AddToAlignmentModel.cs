@@ -9,6 +9,7 @@ using NINA.Profile;
 using NINA.Profile.Interfaces;
 using NINA.WPF.Base.Interfaces.Mediator;
 using NINA.WPF.Base.Interfaces.ViewModel;
+using NINA.View.Sequencer;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -32,9 +33,6 @@ namespace ADPUK.NINA.AddToAlignmentModel {
         private readonly IPluginOptionsAccessor pluginSettings;
         private readonly IProfileService profileService;
         private readonly ITelescopeMediator telescopeMediator;
-
-        // Implementing a file pattern
-        private readonly ImagePattern exampleImagePattern = new ImagePattern("$$EXAMPLEPATTERN$$", "An example of an image pattern implementation", "Add To Alignment Model");
 
         [ImportingConstructor]
         public AddToAlignmentModel(IProfileService profileService, IOptionsVM options, ITelescopeMediator telescopeMediator) {

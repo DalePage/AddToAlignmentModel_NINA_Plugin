@@ -1,0 +1,64 @@
+﻿<ResourceDictionary 
+    x:Class="ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems.DataTemplates"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local ="clr-namespace:ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems"
+    xmlns:view="clr-namespace:NINA.View.Sequencer;assembly=NINA.Sequencer">
+
+
+    <DataTemplate DataType="{x:Type local:CreateAlignmentModel}">
+        <view:SequenceBlockView>
+            <view:SequenceBlockView.SequenceItemContent>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
+                    <StackPanel 
+                    HorizontalAlignment="Left"
+                    DataContext="{Binding}" 
+                    Orientation="Horizontal" 
+                    Visibility="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type view:SequenceBlockView}}, Path=DataContext.Inherited, Converter={StaticResource InverseBooleanToVisibilityCollapsedConverter}}">
+                        <TextBlock VerticalAlignment="Center" Text="  Number of Azimuth Points: " />
+                        <TextBox
+                        MinWidth="20"
+                        Margin="5,0,0,0"
+                        TextAlignment="Right">
+                            <TextBox.Text>
+                                <Binding Path="numberOfAzimuthPoints" UpdateSourceTrigger="LostFocus" />
+                            </TextBox.Text>
+                        </TextBox>
+                        <TextBlock VerticalAlignment="Center" Text="  Number of Altitude Points: " />
+                        <TextBox
+                        MinWidth="20"
+                        Margin="5,0,0,0"
+                        TextAlignment="Right">
+                            <TextBox.Text>
+                                <Binding Path="numberOfAltitudePoints"  UpdateSourceTrigger="LostFocus" />
+                            </TextBox.Text>
+                        </TextBox>
+                        <TextBlock VerticalAlignment="Center" Text="  Minimum Altidude: " />
+                        <TextBox
+                        MinWidth="20"
+                        Margin="5,0,0,0"
+                        TextAlignment="Right">
+                            <TextBox.Text>
+                                <Binding Path="minElevation" UpdateSourceTrigger="LostFocus" />
+                            </TextBox.Text>
+                        </TextBox>
+                        <TextBlock VerticalAlignment="Center" Text="  Maximum Altitude: " />
+                        <TextBox
+                        MinWidth="20"
+                        Margin="5,0,0,0"
+                        TextAlignment="Right">
+                            <TextBox.Text>
+                                <Binding Path="maxElevation"  UpdateSourceTrigger="LostFocus" />
+                            </TextBox.Text>
+                        </TextBox>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
+                        <TextBlock TextAlignment="Right" Text="  Completed: "/>
+                        <TextBlock TextAlignment="Left" Text="{Binding completedDisplay}" />
+                    </StackPanel>
+                </StackPanel>
+            </view:SequenceBlockView.SequenceItemContent>
+        </view:SequenceBlockView>
+    </DataTemplate>
+
+</ResourceDictionary>

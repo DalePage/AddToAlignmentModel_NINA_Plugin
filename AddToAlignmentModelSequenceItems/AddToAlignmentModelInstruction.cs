@@ -4,6 +4,7 @@ using ASCOM.Com.DriverAccess;
 using Newtonsoft.Json;
 using NINA.Astrometry;
 using NINA.Core.Locale;
+using NINA.Core.Enum;
 using NINA.Core.Model;
 using NINA.Core.Utility.Notification;
 using NINA.Equipment.Interfaces.Mediator;
@@ -34,7 +35,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelTestCategory {
     [ExportMetadata("Name", "Add Current Target to Pointing Model")]
     [ExportMetadata("Description", "This plugin assumes a plate solve has been completed and can be used to update the mount pointing model.")]
     [ExportMetadata("Icon", "TelescopeSVG")]
-    [ExportMetadata("Category", "Add To Alignment Model")]
+    [ExportMetadata("Category", "Add To CPWI Alignment Model")]
     [Export(typeof(ISequenceItem))]
     [JsonObject(MemberSerialization.OptIn)]
     public class AddToAlignmentModelInstruction : SequenceItem {
@@ -71,7 +72,6 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelTestCategory {
 
         private  ITelescopeMediator telescopeMediator;
         private  IProfileService profileService;
-        private bool hasSynced = false;
 
         [ImportingConstructor]
         public AddToAlignmentModelInstruction(IProfileService profileService, ITelescopeMediator telescopeMediator) {
@@ -127,8 +127,13 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelTestCategory {
         }
         public virtual bool Validate() {
             var i = new List<string>();
-            if (!telescopeMediator.GetInfo().Connected) {
+            var scopeInfo = telescopeMediator.GetInfo();
+            if (!scopeInfo.Connected) {
                 i.Add(Loc.Instance["LblTelescopeNotConnected"]);
+            } else if (scopeInfo.Name != "CPWI") {
+                i.Add("Only works with CPWI scopes");
+            } else if (scopeInfo.AlignmentMode != AlignmentMode.AltAz) {
+                i.Add("Only works with AltAz mounts");
             }
             Issues = i;
             return i.Count == 0;

@@ -19,16 +19,20 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Runtime.InteropServices;
+using NINA.Astrometry;
+using NINA.Core.Utility.Notification;
+using System.Windows;
+using NINA.Equipment.Equipment.MyTelescope;
 
-namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems
-{
-    [ExportMetadata("Name", "Solve Sync and Add to Alignment Model")]
-    [ExportMetadata("Description", "Lbl_SequenceItem_Platesolving_SolveAndSync_Description")]
+namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
+    [ExportMetadata("Name", "Create Alignement Model")]
+    [ExportMetadata("Description", "The instruction carries plate solves at a number of AltAz points and adds them to the pointing model.")]
     [ExportMetadata("Icon", "CrosshairSVG")]
     [ExportMetadata("Category", "Add To CPWI Alignment Model")]
     [Export(typeof(ISequenceItem))]
     [JsonObject(MemberSerialization.OptIn)]
-    public class SolveSyncAddToAlignmentModel : SequenceItem, IValidatable {
+    public class CreateAlignmentModel : SequenceItem, IValidatable {
         private IProfileService profileService;
         private ITelescopeMediator telescopeMediator;
         private IRotatorMediator rotatorMediator;
@@ -36,10 +40,59 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems
         private IFilterWheelMediator filterWheelMediator;
         private IPlateSolverFactory plateSolverFactory;
         private IWindowServiceFactory windowServiceFactory;
+        private int _numberOfAzimuthPoints;
+        private int _numberOfAltitudePoints;
+        private double _maxElevation;
+        private double _minElevation;
+        private string _completedDisplay;
+
+        public string completedDisplay {
+            get { return _completedDisplay ?? "0/0"; }
+            set {
+                _completedDisplay = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        [JsonProperty]
+        public int numberOfAzimuthPoints {
+            get { return _numberOfAzimuthPoints; }
+            set {
+                _numberOfAzimuthPoints = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        [JsonProperty]
+        public int numberOfAltitudePoints {
+            get { return _numberOfAltitudePoints; }
+            set {
+                _numberOfAltitudePoints = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        [JsonProperty]
+        public double maxElevation {
+            get { return _maxElevation; }
+            set {
+                _maxElevation = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        [JsonProperty]
+        public double minElevation {
+            get { return _minElevation; }
+            set {
+                _minElevation = value;
+                RaisePropertyChanged();
+            }
+        }
         public PlateSolvingStatusVM PlateSolveStatusVM { get; } = new PlateSolvingStatusVM();
 
         [ImportingConstructor]
-        public SolveSyncAddToAlignmentModel(IProfileService profileService,
+        public CreateAlignmentModel(IProfileService profileService,
                             ITelescopeMediator telescopeMediator,
                             IRotatorMediator rotatorMediator,
                             IImagingMediator imagingMediator,
@@ -53,9 +106,13 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems
             this.filterWheelMediator = filterWheelMediator;
             this.plateSolverFactory = plateSolverFactory;
             this.windowServiceFactory = windowServiceFactory;
+            maxElevation = 80.0;
+            minElevation = 30.0;
+            numberOfAltitudePoints = 2;
+            numberOfAzimuthPoints = 6;
         }
 
-        private SolveSyncAddToAlignmentModel(SolveSyncAddToAlignmentModel cloneMe) : this(cloneMe.profileService,
+        private CreateAlignmentModel(CreateAlignmentModel cloneMe) : this(cloneMe.profileService,
                                                           cloneMe.telescopeMediator,
                                                           cloneMe.rotatorMediator,
                                                           cloneMe.imagingMediator,
@@ -63,10 +120,14 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems
                                                           cloneMe.plateSolverFactory,
                                                           cloneMe.windowServiceFactory) {
             CopyMetaData(cloneMe);
+            maxElevation = cloneMe.maxElevation;
+            minElevation = cloneMe.minElevation;
+            numberOfAzimuthPoints = cloneMe.numberOfAzimuthPoints;
+            numberOfAltitudePoints = cloneMe.numberOfAltitudePoints;
         }
 
         public override object Clone() {
-            return new SolveSyncAddToAlignmentModel(this);
+            return new CreateAlignmentModel(this);
         }
 
         private IList<string> issues = new List<string>();
@@ -80,25 +141,67 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems
         }
 
         public override async Task Execute(IProgress<ApplicationStatus> progress, CancellationToken token) {
-            var service = windowServiceFactory.Create();
+            int stepCount = 0;
+            int totalSteps = numberOfAltitudePoints + numberOfAzimuthPoints;
+            completedDisplay = $"{stepCount}/{totalSteps}";
+            IWindowService service = windowServiceFactory.Create();
             progress = PlateSolveStatusVM.CreateLinkedProgress(progress);
             service.Show(PlateSolveStatusVM, Loc.Instance["Lbl_SequenceItem_Platesolving_SolveAndSync_Name"], System.Windows.ResizeMode.CanResize, System.Windows.WindowStyle.ToolWindow);
             try {
-                var result = await DoSolve(progress, token);
-                if (result.Success == false) {
-                    throw new SequenceEntityFailedException(Loc.Instance["LblPlatesolveFailed"]);
+                double altStep = 0;
+                if (numberOfAltitudePoints > 1) {
+                    altStep = (maxElevation - minElevation) / (numberOfAltitudePoints - 1);
                 } else {
-                    var sync = await telescopeMediator.Sync(result.Coordinates);
-                    var orientation = (float)result.PositionAngle;
-                    rotatorMediator.Sync(orientation);
-                    if (!sync) {
-                        throw new SequenceEntityFailedException(Loc.Instance["LblSyncFailed"]);
+                    minElevation = (minElevation + maxElevation) / 2.0;
+                    altStep = (maxElevation + minElevation / 2.0);
+                }
+                double azStep = 360.0 / numberOfAzimuthPoints;
+                double initialAzimuth = 0.0;
+                double targetAz = initialAzimuth;
+                string hemisphere = "north";
+                TelescopeInfo telescopeInfo = telescopeMediator.GetInfo();
+                TopocentricCoordinates altAzTarget = null;
+                if (telescopeMediator.GetInfo().SiteLatitude < 0.0) {
+                    hemisphere = "south";
+                    initialAzimuth = 180.0;
+                }
+                MessageBoxResult boxResult = MessageBox.Show($"Please ensure the scope is roughly pointing at the horizon due {hemisphere}", "Pre-Alignment", MessageBoxButton.OKCancel);
+                if (boxResult != MessageBoxResult.OK) {
+                    throw new SequenceEntityFailedException($"Scope pe-alignemt to {hemisphere}ern horizon not confirmed");
+                }
+                if (Math.Abs(telescopeMediator.GetInfo().Azimuth - initialAzimuth) > 10.0 || Math.Abs(telescopeMediator.GetInfo().Altitude) > 10.0) {
+                    throw new SequenceEntityFailedException($"Scope does not appear to be pointing at the {hemisphere}ern horizon");
+                }
+                for (double nextAz = initialAzimuth; nextAz < initialAzimuth + 360 + (0.1 * azStep); nextAz += azStep) {
+                    targetAz = nextAz < 360.0 ? nextAz : nextAz - 360.0;
+
+                    for (double nextAlt = minElevation; nextAlt <= maxElevation; nextAlt += altStep) {
+                        stepCount++;
+                        altAzTarget = new TopocentricCoordinates(
+                            Angle.ByDegree(targetAz),
+                            Angle.ByDegree(nextAlt),
+                            Angle.ByDegree(telescopeInfo.SiteLatitude),
+                            Angle.ByDegree(telescopeInfo.SiteLongitude)
+                            );
+                        await telescopeMediator.SlewToCoordinatesAsync(altAzTarget, token);
+                        if (ADP_Tools.AboveHorizon(telescopeMediator.GetCurrentPosition(),
+                                profileService.ActiveProfile.AstrometrySettings.Horizon,
+                                profileService.ActiveProfile.AstrometrySettings.Latitude)) {
+                            PlateSolveResult result = await DoSolve(progress, token);
+                            if (!result.Success) {
+                                Notification.ShowWarning($"Plate solve faild at Az: {targetAz}, Alt: {nextAlt}");
+                            } else {
+                                string addAlignmentResponse = telescopeMediator.Action("Telescope:AddAlignmentReference", $"{result.Coordinates.RA}:{result.Coordinates.Dec}");
+                            }
+                        } else {
+                            Notification.ShowWarning($"Target at Az: {targetAz}, Alt: {nextAlt} is below the horizon");
+                        }
                     }
-                    string addAlignmentResponse = telescopeMediator.Action("Telescope:AddAlignmentReference", $"{result.Coordinates.RA}:{result.Coordinates.Dec}");
                 }
             } finally {
-                service.DelayedClose(TimeSpan.FromSeconds(10));
+                service.DelayedClose(new TimeSpan(0, 0, 10));
             }
+
         }
 
         protected virtual async Task<PlateSolveResult> DoSolve(IProgress<ApplicationStatus> progress, CancellationToken token) {
@@ -144,13 +247,9 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems
             return i.Count == 0;
         }
 
-        public override void AfterParentChanged() {
-            Validate();
-            base.AfterParentChanged();
-        }
 
         public override string ToString() {
-            return $"Category: {Category}, Item: {nameof(SolveSyncAddToAlignmentModel)}";
+            return $"Category: {Category}, Item: {nameof(CreateAlignmentModel)}";
         }
     }
 

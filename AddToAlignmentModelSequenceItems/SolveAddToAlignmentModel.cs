@@ -3,6 +3,7 @@ using NINA.Core.Locale;
 using NINA.Core.Model.Equipment;
 using NINA.Core.Model;
 using NINA.Core.Utility.WindowService;
+using NINA.Core.Enum;
 using NINA.Equipment.Interfaces.Mediator;
 using NINA.Equipment.Model;
 using NINA.PlateSolving.Interfaces;
@@ -24,9 +25,9 @@ using NINA.Core.Utility.Notification;
 
 namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
     [ExportMetadata("Name", "Solve and Add to Alignment Model")]
-    [ExportMetadata("Description", "Lbl_SequenceItem_Platesolving_SolveAndSync_Description")]
+    [ExportMetadata("Description", "The instruction carries out a plate solve and adds the computed location to the mount's alignment model")]
     [ExportMetadata("Icon", "CrosshairSVG")]
-    [ExportMetadata("Category", "Add To Alignment Model")]
+    [ExportMetadata("Category", "Add To CPWI Alignment Model")]
     [Export(typeof(ISequenceItem))]
     [JsonObject(MemberSerialization.OptIn)]
     public class SolveAddToAlignmentModel : SequenceItem, IValidatable {
@@ -90,7 +91,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                         profileService.ActiveProfile.AstrometrySettings.Horizon,
                         profileService.ActiveProfile.AstrometrySettings.Latitude)) {
                     PlateSolveResult result = await DoSolve(progress, token);
-                    if (result.Success == false) {
+                    if (!result.Success) {
                         throw new SequenceEntityFailedException(Loc.Instance["LblPlatesolveFailed"]);
                     } else {
                         string addAlignmentResponse = telescopeMediator.Action("Telescope:AddAlignmentReference", $"{result.Coordinates.RA}:{result.Coordinates.Dec}");
@@ -134,8 +135,13 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
 
         public virtual bool Validate() {
             var i = new List<string>();
-            if (!telescopeMediator.GetInfo().Connected) {
+            var scopeInfo = telescopeMediator.GetInfo();
+            if (!scopeInfo.Connected) {
                 i.Add(Loc.Instance["LblTelescopeNotConnected"]);
+            } else if (scopeInfo.Name != "CPWI") {
+                i.Add("Only works with CPWI scopes");
+            } else if (scopeInfo.AlignmentMode != AlignmentMode.AltAz) {
+                i.Add("Only works with AltAz mounts");
             }
             Issues = i;
             return i.Count == 0;
