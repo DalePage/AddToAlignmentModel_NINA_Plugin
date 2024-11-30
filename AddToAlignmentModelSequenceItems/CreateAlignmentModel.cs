@@ -50,7 +50,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         private int _stepCount;
         private bool _isReadOnly;
 
-        public bool isReadOnly {
+        public bool IsReadOnly {
             get { return _isReadOnly; }
             set {
                 _isReadOnly = value;
@@ -58,10 +58,10 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
             }
         }
 
-        public int total_Steps {
+        public int TotalSteps {
             get { return _numberOfAltitudePoints * _numberOfAzimuthPoints; }
         }
-        public int stepCount {
+        public int StepCount {
             get { return _stepCount; }
             set {
                 _stepCount = value;
@@ -70,7 +70,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         }
 
         [JsonProperty]
-        public int numberOfAzimuthPoints {
+        public int NumberOfAzimuthPoints {
             get { return _numberOfAzimuthPoints; }
             set {
                 _numberOfAzimuthPoints = value;
@@ -80,17 +80,17 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         }
 
         [JsonProperty]
-        public int numberOfAltitudePoints {
+        public int NumberOfAltitudePoints {
             get { return _numberOfAltitudePoints; }
             set {
                 _numberOfAltitudePoints = value;
-                RaisePropertyChanged("total_Steps");
+                RaisePropertyChanged(nameof(TotalSteps));
                 RaisePropertyChanged();
             }
         }
 
         [JsonProperty]
-        public double maxElevation {
+        public double MaxElevation {
             get { return _maxElevation; }
             set {
                 _maxElevation = value;
@@ -99,7 +99,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         }
 
         [JsonProperty]
-        public double minElevation {
+        public double MinElevation {
             get { return _minElevation; }
             set {
                 _minElevation = value;
@@ -125,10 +125,10 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
             this.plateSolverFactory = plateSolverFactory;
             this.windowServiceFactory = windowServiceFactory;
             this.cameraMediator = cameraMediator;
-            maxElevation = 80.0;
-            minElevation = 30.0;
-            numberOfAltitudePoints = 2;
-            numberOfAzimuthPoints = 6;
+            MaxElevation = 80.0;
+            MinElevation = 30.0;
+            NumberOfAltitudePoints = 2;
+            NumberOfAzimuthPoints = 6;
         }
 
         private CreateAlignmentModel(CreateAlignmentModel cloneMe) : this(cloneMe.profileService,
@@ -140,17 +140,17 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                                                           cloneMe.windowServiceFactory,
                                                           cloneMe.cameraMediator) {
             CopyMetaData(cloneMe);
-            maxElevation = cloneMe.maxElevation;
-            minElevation = cloneMe.minElevation;
-            numberOfAzimuthPoints = cloneMe.numberOfAzimuthPoints;
-            numberOfAltitudePoints = cloneMe.numberOfAltitudePoints;
+            MaxElevation = cloneMe.MaxElevation;
+            MinElevation = cloneMe.MinElevation;
+            NumberOfAzimuthPoints = cloneMe.NumberOfAzimuthPoints;
+            NumberOfAltitudePoints = cloneMe.NumberOfAltitudePoints;
         }
 
         public override object Clone() {
             return new CreateAlignmentModel(this);
         }
 
-        private IList<string> issues = new List<string>();
+        private IList<string> issues = [];
 
         public IList<string> Issues {
             get => issues;
@@ -161,19 +161,19 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         }
 
         public override async Task Execute(IProgress<ApplicationStatus> progress, CancellationToken token) {
-            stepCount = 0;
-            isReadOnly = true;
+            StepCount = 0;
+            IsReadOnly = true;
             IWindowService service = windowServiceFactory.Create();
             progress = PlateSolveStatusVM.CreateLinkedProgress(progress);
             try {
                 double altStep = 0;
-                if (numberOfAltitudePoints > 1) {
-                    altStep = (maxElevation - minElevation) / (numberOfAltitudePoints - 1);
+                if (NumberOfAltitudePoints > 1) {
+                    altStep = ((MaxElevation - MinElevation) / (NumberOfAltitudePoints - 1));
                 } else {
-                    minElevation = (minElevation + maxElevation) / 2.0;
-                    altStep = (maxElevation + minElevation / 2.0);
+                    MinElevation = ((MinElevation + MaxElevation) / 2.0);
+                    altStep = (MaxElevation + MinElevation) / 2.0;
                 }
-                double azStep = 360.0 / numberOfAzimuthPoints;
+                double azStep = (360.0 / NumberOfAzimuthPoints);
                 double initialAzimuth = 0.0;
                 double targetAz = initialAzimuth;
                 string hemisphere = "north";
@@ -193,8 +193,8 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                 for (double nextAz = initialAzimuth; nextAz < initialAzimuth + 360 + (0.1 * azStep); nextAz += azStep) {
                     targetAz = nextAz < 360.0 ? nextAz : nextAz - 360.0;
 
-                    for (double nextAlt = minElevation; nextAlt <= maxElevation; nextAlt += altStep) {
-                        stepCount++;
+                    for (double nextAlt = MinElevation; nextAlt <= MaxElevation; nextAlt += altStep) {
+                        StepCount++;
                         altAzTarget = new TopocentricCoordinates(
                             Angle.ByDegree(targetAz),
                             Angle.ByDegree(nextAlt),
@@ -222,7 +222,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                 }
             } finally {
                 service.DelayedClose(new TimeSpan(0, 0, 10));
-                isReadOnly = false;
+                IsReadOnly = false;
             }
 
         }

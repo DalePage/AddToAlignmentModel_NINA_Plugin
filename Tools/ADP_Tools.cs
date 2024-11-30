@@ -17,8 +17,7 @@ namespace ADPUK.NINA.AddToAlignmentModel {
             return (currentAlt > horizon.GetAltitude(currentAz));
         }
         public static bool AboveHorizon(TopocentricCoordinates topocentricCoordinates, CustomHorizon horizon) {
-            if (horizon == null) { return true; }
-            return topocentricCoordinates.Altitude.Degree > horizon.GetAltitude(topocentricCoordinates.Azimuth.Degree);
+            return topocentricCoordinates.Altitude.Degree >= horizon.GetAltitude(topocentricCoordinates.Azimuth.Degree) || (horizon == null);
         }
     }
 }

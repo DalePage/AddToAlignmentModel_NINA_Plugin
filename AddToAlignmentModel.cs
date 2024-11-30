@@ -30,12 +30,11 @@ namespace ADPUK.NINA.AddToAlignmentModel {
     /// </summary>
     [Export(typeof(IPluginManifest))]
     public class AddToAlignmentModel : PluginBase, INotifyPropertyChanged {
-        private readonly IPluginOptionsAccessor pluginSettings;
+        private readonly PluginOptionsAccessor pluginSettings;
         private readonly IProfileService profileService;
-        private readonly ITelescopeMediator telescopeMediator;
 
         [ImportingConstructor]
-        public AddToAlignmentModel(IProfileService profileService, IOptionsVM options, ITelescopeMediator telescopeMediator) {
+        public AddToAlignmentModel(IProfileService profileService, IOptionsVM options) {
             if (Settings.Default.UpdateSettings) {
                 Settings.Default.Upgrade();
                 Settings.Default.UpdateSettings = false;
@@ -49,7 +48,6 @@ namespace ADPUK.NINA.AddToAlignmentModel {
             profileService.ProfileChanged += ProfileService_ProfileChanged;
 
             // Hook in to telescope
-            this.telescopeMediator  = telescopeMediator;
 
         }
 

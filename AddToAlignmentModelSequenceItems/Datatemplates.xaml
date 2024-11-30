@@ -20,9 +20,9 @@
                         MinWidth="20"
                         Margin="5,0,0,0"
                         TextAlignment="Right"
-                        IsReadOnly="{Binding isReadOnly}">
+                        IsReadOnly="{Binding IsReadOnly}">
                             <TextBox.Text>
-                                <Binding Path="numberOfAzimuthPoints" UpdateSourceTrigger="LostFocus" />
+                                <Binding Path="NumberOfAzimuthPoints" UpdateSourceTrigger="LostFocus" />
                             </TextBox.Text>
                         </TextBox>
                         <TextBlock VerticalAlignment="Center" Text="  Number of Altitude Points: " />
@@ -30,9 +30,9 @@
                         MinWidth="20"
                         Margin="5,0,0,0"
                         TextAlignment="Right"
-                        IsReadOnly="{Binding isReadOnly}">
+                        IsReadOnly="{Binding IsReadOnly}">
                             <TextBox.Text>
-                                <Binding Path="numberOfAltitudePoints"  UpdateSourceTrigger="LostFocus" />
+                                <Binding Path="NumberOfAltitudePoints"  UpdateSourceTrigger="LostFocus" />
                             </TextBox.Text>
                         </TextBox>
                         <TextBlock VerticalAlignment="Center" Text="  Minimum Altidude: " />
@@ -40,9 +40,9 @@
                         MinWidth="20"
                         Margin="5,0,0,0"
                         TextAlignment="Right"
-                        IsReadOnly="{Binding isReadOnly}">
+                        IsReadOnly="{Binding IsReadOnly}">
                             <TextBox.Text>
-                                <Binding Path="minElevation" UpdateSourceTrigger="LostFocus" />
+                                <Binding Path="MinElevation" UpdateSourceTrigger="LostFocus" />
                             </TextBox.Text>
                         </TextBox>
                         <TextBlock VerticalAlignment="Center" Text="  Maximum Altitude: " />
@@ -50,17 +50,17 @@
                         MinWidth="20"
                         Margin="5,0,0,0"
                         TextAlignment="Right"
-                        IsReadOnly="{Binding isReadOnly}">
+                        IsReadOnly="{Binding IsReadOnly}">
                             <TextBox.Text>
-                                <Binding Path="maxElevation"  UpdateSourceTrigger="LostFocus" />
+                                <Binding Path="MaxElevation"  UpdateSourceTrigger="LostFocus" />
                             </TextBox.Text>
                         </TextBox>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
                         <TextBlock TextAlignment="Right" Text="  Completed: "/>
-                        <TextBlock TextAlignment="Left" Text="{Binding stepCount}" />
+                        <TextBlock TextAlignment="Left" Text="{Binding StepCount}" />
                         <TextBlock TextAlignment="Left" Text="/" />
-                        <TextBlock TextAlignment="Left" Text="{Binding total_Steps}" />
+                        <TextBlock TextAlignment="Left" Text="{Binding TotalSteps}" />
 
                     </StackPanel>
                 </StackPanel>

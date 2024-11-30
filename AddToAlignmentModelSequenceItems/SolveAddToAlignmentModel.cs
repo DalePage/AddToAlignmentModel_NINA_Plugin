@@ -71,7 +71,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
             return new SolveAddToAlignmentModel(this);
         }
 
-        private IList<string> issues = new List<string>();
+        private IList<string> issues = [];
 
         public IList<string> Issues {
             get => issues;
