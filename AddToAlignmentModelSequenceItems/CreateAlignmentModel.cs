@@ -25,6 +25,7 @@ using NINA.Core.Utility.Notification;
 using System.Windows;
 using NINA.Equipment.Equipment.MyTelescope;
 using System.Text.Json;
+using Namotion.Reflection;
 
 namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
     [ExportMetadata("Name", "Create Alignement Model")]
@@ -34,6 +35,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
     [Export(typeof(ISequenceItem))]
     [JsonObject(MemberSerialization.OptIn)]
     public class CreateAlignmentModel : SequenceItem, IValidatable {
+        private ICameraMediator cameraMediator;
         private IProfileService profileService;
         private ITelescopeMediator telescopeMediator;
         private IRotatorMediator rotatorMediator;
@@ -57,7 +59,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         }
 
         public int total_Steps {
-            get { return _numberOfAltitudePoints + _numberOfAzimuthPoints; }
+            get { return _numberOfAltitudePoints * _numberOfAzimuthPoints; }
         }
         public int stepCount {
             get { return _stepCount; }
@@ -113,7 +115,8 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                             IImagingMediator imagingMediator,
                             IFilterWheelMediator filterWheelMediator,
                             IPlateSolverFactory plateSolverFactory,
-                            IWindowServiceFactory windowServiceFactory) {
+                            IWindowServiceFactory windowServiceFactory,
+                            ICameraMediator cameraMediator) {
             this.profileService = profileService;
             this.telescopeMediator = telescopeMediator;
             this.rotatorMediator = rotatorMediator;
@@ -121,6 +124,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
             this.filterWheelMediator = filterWheelMediator;
             this.plateSolverFactory = plateSolverFactory;
             this.windowServiceFactory = windowServiceFactory;
+            this.cameraMediator = cameraMediator;
             maxElevation = 80.0;
             minElevation = 30.0;
             numberOfAltitudePoints = 2;
@@ -133,7 +137,8 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                                                           cloneMe.imagingMediator,
                                                           cloneMe.filterWheelMediator,
                                                           cloneMe.plateSolverFactory,
-                                                          cloneMe.windowServiceFactory) {
+                                                          cloneMe.windowServiceFactory,
+                                                          cloneMe.cameraMediator) {
             CopyMetaData(cloneMe);
             maxElevation = cloneMe.maxElevation;
             minElevation = cloneMe.minElevation;
@@ -156,10 +161,10 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         }
 
         public override async Task Execute(IProgress<ApplicationStatus> progress, CancellationToken token) {
+            stepCount = 0;
             isReadOnly = true;
             IWindowService service = windowServiceFactory.Create();
             progress = PlateSolveStatusVM.CreateLinkedProgress(progress);
-            service.Show(PlateSolveStatusVM, Loc.Instance["Lbl_SequenceItem_Platesolving_SolveAndSync_Name"], System.Windows.ResizeMode.CanResize, System.Windows.WindowStyle.ToolWindow);
             try {
                 double altStep = 0;
                 if (numberOfAltitudePoints > 1) {
@@ -196,10 +201,12 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                             Angle.ByDegree(telescopeInfo.SiteLatitude),
                             Angle.ByDegree(telescopeInfo.SiteLongitude)
                             );
-                        await telescopeMediator.SlewToCoordinatesAsync(altAzTarget, token);
-                        if (ADP_Tools.AboveHorizon(telescopeMediator.GetCurrentPosition(),
-                                profileService.ActiveProfile.AstrometrySettings.Horizon,
-                                profileService.ActiveProfile.AstrometrySettings.Latitude)) {
+                        if (ADP_Tools.AboveHorizon(
+                                altAzTarget,
+                                profileService.ActiveProfile.AstrometrySettings.Horizon)) {
+                            Task[] taskList = [telescopeMediator.SlewToCoordinatesAsync(altAzTarget, token), service.Close() ];
+                            Task.WaitAll(taskList);
+                            service.Show(PlateSolveStatusVM, Loc.Instance["Lbl_SequenceItem_Platesolving_SolveAndSync_Name"], System.Windows.ResizeMode.CanResize, System.Windows.WindowStyle.ToolWindow);
                             PlateSolveResult result = await DoSolve(progress, token);
                             if (!result.Success) {
                                 Notification.ShowWarning($"Plate solve faild at Az: {targetAz}, Alt: {nextAlt}");
@@ -252,11 +259,17 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
             var scopeInfo = telescopeMediator.GetInfo();
             if (!scopeInfo.Connected) {
                 i.Add(Loc.Instance["LblTelescopeNotConnected"]);
-            } else if (scopeInfo.Name != "CPWI") {
+            }
+            if (scopeInfo.Name != "CPWI") {
                 i.Add("Only works with CPWI scopes");
-            } else if (scopeInfo.AlignmentMode != AlignmentMode.AltAz) {
+            }
+            if (scopeInfo.AlignmentMode != AlignmentMode.AltAz) {
                 i.Add("Only works with AltAz mounts");
             }
+            if (!cameraMediator.GetInfo().Connected) {
+                i.Add("Camera not connected");
+            }
+
             Issues = i;
             return i.Count == 0;
         }

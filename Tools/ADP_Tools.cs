@@ -11,9 +11,14 @@ using System.Threading.Tasks;
 namespace ADPUK.NINA.AddToAlignmentModel {
     public class ADP_Tools {
         public static bool AboveHorizon(Coordinates currentPosition, CustomHorizon horizon, double latitude) {
+            if (horizon == null) return true;
             double currentAlt = AstroUtil.GetAltitude(currentPosition.RADegrees, latitude, currentPosition.Dec);
             double currentAz = AstroUtil.GetAzimuth(currentPosition.RADegrees, currentAlt, latitude, currentPosition.Dec);
             return (currentAlt > horizon.GetAltitude(currentAz));
+        }
+        public static bool AboveHorizon(TopocentricCoordinates topocentricCoordinates, CustomHorizon horizon) {
+            if (horizon == null) { return true; }
+            return topocentricCoordinates.Altitude.Degree > horizon.GetAltitude(topocentricCoordinates.Azimuth.Degree);
         }
     }
 }
