@@ -204,8 +204,10 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                         if (ADP_Tools.AboveHorizon(
                                 altAzTarget,
                                 profileService.ActiveProfile.AstrometrySettings.Horizon)) {
+
                             Task[] taskList = [telescopeMediator.SlewToCoordinatesAsync(altAzTarget, token), service.Close() ];
-                            Task.WaitAll(taskList);
+                            Task.WaitAll(taskList, token);
+                            if (token.IsCancellationRequested) { return; }
                             service.Show(PlateSolveStatusVM, Loc.Instance["Lbl_SequenceItem_Platesolving_SolveAndSync_Name"], System.Windows.ResizeMode.CanResize, System.Windows.WindowStyle.ToolWindow);
                             PlateSolveResult result = await DoSolve(progress, token);
                             if (!result.Success) {
