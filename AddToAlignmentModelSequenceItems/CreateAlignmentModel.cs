@@ -186,7 +186,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                 if (Math.Abs(telescopeMediator.GetInfo().Azimuth - initialAzimuth) > 10.0 || Math.Abs(telescopeMediator.GetInfo().Altitude) > 10.0) {
                     throw new SequenceEntityFailedException($"Scope does not appear to be pointing at the {hemisphere}ern horizon");
                 }
-                for (double nextAz = initialAzimuth; nextAz < initialAzimuth + 360 + (0.1 * azStep); nextAz += azStep) {
+                for (double nextAz = initialAzimuth; nextAz < initialAzimuth + 360.0 + (0.1 * azStep); nextAz += azStep) {
                     targetAz = nextAz < 360.0 ? nextAz : nextAz - 360.0;
 
                     for (double nextAlt = MinElevation; nextAlt <= MaxElevation; nextAlt += altStep) {
@@ -209,7 +209,8 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                             if (!result.Success) {
                                 Notification.ShowWarning($"Plate solve faild at Az: {targetAz}, Alt: {nextAlt}");
                             } else {
-                                string addAlignmentResponse = telescopeMediator.Action("Telescope:AddAlignmentReference", $"{result.Coordinates.RA}:{result.Coordinates.Dec}");
+                                Coordinates resultCoordinates = result.Coordinates.Transform(Epoch.JNOW);
+                                string addAlignmentResponse = telescopeMediator.Action("Telescope:AddAlignmentReference", $"{resultCoordinates.RA}:{resultCoordinates.Dec}");
                             }
                         } else {
                             Notification.ShowWarning($"Target at Az: {targetAz}, Alt: {nextAlt} is below the horizon");
