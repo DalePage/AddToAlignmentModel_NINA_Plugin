@@ -34,6 +34,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         private IFilterWheelMediator filterWheelMediator;
         private IPlateSolverFactory plateSolverFactory;
         private IWindowServiceFactory windowServiceFactory;
+        private ICameraMediator cameraMediator;
         public PlateSolvingStatusVM PlateSolveStatusVM { get; } = new PlateSolvingStatusVM();
 
         [ImportingConstructor]
@@ -43,7 +44,8 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                             IImagingMediator imagingMediator,
                             IFilterWheelMediator filterWheelMediator,
                             IPlateSolverFactory plateSolverFactory,
-                            IWindowServiceFactory windowServiceFactory) {
+                            IWindowServiceFactory windowServiceFactory,
+                            ICameraMediator cameraMediator) {
             this.profileService = profileService;
             this.telescopeMediator = telescopeMediator;
             this.rotatorMediator = rotatorMediator;
@@ -51,6 +53,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
             this.filterWheelMediator = filterWheelMediator;
             this.plateSolverFactory = plateSolverFactory;
             this.windowServiceFactory = windowServiceFactory;
+            this.cameraMediator = cameraMediator;
         }
 
         private SolveAddToAlignmentModel(SolveAddToAlignmentModel cloneMe) : this(cloneMe.profileService,
@@ -59,7 +62,8 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                                                           cloneMe.imagingMediator,
                                                           cloneMe.filterWheelMediator,
                                                           cloneMe.plateSolverFactory,
-                                                          cloneMe.windowServiceFactory) {
+                                                          cloneMe.windowServiceFactory,
+                                                          cloneMe.cameraMediator) {
             CopyMetaData(cloneMe);
         }
 
@@ -134,11 +138,17 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
             var scopeInfo = telescopeMediator.GetInfo();
             if (!scopeInfo.Connected) {
                 i.Add(Loc.Instance["LblTelescopeNotConnected"]);
-            } else if (scopeInfo.Name != "CPWI") {
+            }
+            if (scopeInfo.Name != "CPWI") {
                 i.Add("Only works with CPWI scopes");
-            } else if (scopeInfo.AlignmentMode != AlignmentMode.AltAz) {
+            } 
+            if (scopeInfo.AlignmentMode != AlignmentMode.AltAz) {
                 i.Add("Only works with AltAz mounts");
             }
+            if (!cameraMediator.GetInfo().Connected) {
+                i.Add("Camera not connected");
+            }
+            
             Issues = i;
             return i.Count == 0;
         }
