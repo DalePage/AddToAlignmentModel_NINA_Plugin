@@ -1,12 +1,5 @@
 ﻿using NINA.Astrometry;
 using NINA.Core.Model;
-using NINA.Profile;
-using NINA.WPF.Base.Mediator;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ADPUK.NINA.AddToAlignmentModel {
     public class ADP_Tools {

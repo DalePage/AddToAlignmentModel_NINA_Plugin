@@ -1,13 +1,14 @@
 ﻿using Newtonsoft.Json;
-using NINA.Core.Locale;
-using NINA.Core.Model.Equipment;
-using NINA.Core.Model;
-using NINA.Core.Utility.WindowService;
 using NINA.Core.Enum;
+using NINA.Core.Locale;
+using NINA.Core.Model;
+using NINA.Core.Model.Equipment;
+using NINA.Core.Utility.Notification;
+using NINA.Core.Utility.WindowService;
 using NINA.Equipment.Interfaces.Mediator;
 using NINA.Equipment.Model;
-using NINA.PlateSolving.Interfaces;
 using NINA.PlateSolving;
+using NINA.PlateSolving.Interfaces;
 using NINA.Profile.Interfaces;
 using NINA.Sequencer.SequenceItem;
 using NINA.Sequencer.Validations;
@@ -15,13 +16,8 @@ using NINA.WPF.Base.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Runtime.InteropServices;
-using NINA.Astrometry;
-using NINA.Core.Utility.Notification;
 
 namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
     [ExportMetadata("Name", "Solve and Add to Alignment Model")]

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.Composition;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using NINA.View.Sequencer;
+﻿using System.ComponentModel.Composition;
 using System.Windows;
 
 namespace ADPUK.NINA.AddToAlignmentModel {

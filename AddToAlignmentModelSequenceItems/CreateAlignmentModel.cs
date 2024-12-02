@@ -1,13 +1,16 @@
 ﻿using Newtonsoft.Json;
-using NINA.Core.Locale;
-using NINA.Core.Model.Equipment;
-using NINA.Core.Model;
-using NINA.Core.Utility.WindowService;
+using NINA.Astrometry;
 using NINA.Core.Enum;
+using NINA.Core.Locale;
+using NINA.Core.Model;
+using NINA.Core.Model.Equipment;
+using NINA.Core.Utility.Notification;
+using NINA.Core.Utility.WindowService;
+using NINA.Equipment.Equipment.MyTelescope;
 using NINA.Equipment.Interfaces.Mediator;
 using NINA.Equipment.Model;
-using NINA.PlateSolving.Interfaces;
 using NINA.PlateSolving;
+using NINA.PlateSolving.Interfaces;
 using NINA.Profile.Interfaces;
 using NINA.Sequencer.SequenceItem;
 using NINA.Sequencer.Validations;
@@ -15,17 +18,10 @@ using NINA.WPF.Base.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Linq;
-using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Runtime.InteropServices;
-using NINA.Astrometry;
-using NINA.Core.Utility.Notification;
 using System.Windows;
-using NINA.Equipment.Equipment.MyTelescope;
-using System.Text.Json;
-using Namotion.Reflection;
 
 namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
     [ExportMetadata("Name", "Create Alignement Model")]
@@ -205,7 +201,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                                 altAzTarget,
                                 profileService.ActiveProfile.AstrometrySettings.Horizon)) {
 
-                            Task[] taskList = [telescopeMediator.SlewToCoordinatesAsync(altAzTarget, token), service.Close() ];
+                            Task[] taskList = [telescopeMediator.SlewToCoordinatesAsync(altAzTarget, token), service.Close()];
                             Task.WaitAll(taskList, token);
                             if (token.IsCancellationRequested) { return; }
                             service.Show(PlateSolveStatusVM, Loc.Instance["Lbl_SequenceItem_Platesolving_SolveAndSync_Name"], System.Windows.ResizeMode.CanResize, System.Windows.WindowStyle.ToolWindow);
