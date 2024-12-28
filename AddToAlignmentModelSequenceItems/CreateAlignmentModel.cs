@@ -45,6 +45,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         private double _minElevation;
         private int _stepCount;
         private bool _isReadOnly;
+        private int _solveAttempts;
 
         public bool IsReadOnly {
             get { return _isReadOnly; }
@@ -99,6 +100,17 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
             get { return _minElevation; }
             set {
                 _minElevation = value;
+                RaisePropertyChanged();
+            }
+        }
+        [JsonProperty]
+        public int SolveAttempts {
+            get {
+                if (_solveAttempts > 0) return _solveAttempts;
+                return profileService.ActiveProfile.PlateSolveSettings.NumberOfAttempts;
+            }
+            set {
+                _solveAttempts = value;
                 RaisePropertyChanged();
             }
         }
@@ -179,12 +191,23 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                     hemisphere = "south";
                     initialAzimuth = 180.0;
                 }
-                MessageBoxResult boxResult = MessageBox.Show($"Please ensure the scope is roughly pointing at the horizon due {hemisphere}", "Pre-Alignment", MessageBoxButton.OKCancel);
+                MessageBoxResult boxResult = MessageBox.Show(
+                    $"Please ensure the scope is roughly pointing at the horizon due {hemisphere}", 
+                    "Pre-Alignment", 
+                    MessageBoxButton.OKCancel);
+
                 if (boxResult != MessageBoxResult.OK) {
                     throw new SequenceEntityFailedException($"Scope pe-alignemt to {hemisphere}ern horizon not confirmed");
                 }
                 if (Math.Abs(telescopeMediator.GetInfo().Azimuth - initialAzimuth) > 10.0 || Math.Abs(telescopeMediator.GetInfo().Altitude) > 10.0) {
-                    throw new SequenceEntityFailedException($"Scope does not appear to be pointing at the {hemisphere}ern horizon");
+                    MessageBoxResult boxResult1 = MessageBox.Show(
+                        $"Scope thinks it is pointing to Az: {telescopeMediator.GetInfo().Azimuth}, Alt: {telescopeMediator.GetInfo().Altitude}", 
+                        "Scope not close to 0,0" ,
+                        MessageBoxButton.OKCancel);
+
+                    if (boxResult1 != MessageBoxResult.OK) {
+                        throw new SequenceEntityFailedException($"Scope does not appear to be pointing where it thinks it should be.");
+                    }
                 }
                 for (double nextAz = initialAzimuth; nextAz < initialAzimuth + 360.0 + (0.1 * azStep); nextAz += azStep) {
                     targetAz = nextAz < 360.0 ? nextAz : nextAz - 360.0;
@@ -230,7 +253,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
 
             var solver = plateSolverFactory.GetCaptureSolver(plateSolver, blindSolver, imagingMediator, filterWheelMediator);
             var parameter = new CaptureSolverParameter() {
-                Attempts = profileService.ActiveProfile.PlateSolveSettings.NumberOfAttempts,
+                Attempts = SolveAttempts,
                 Binning = profileService.ActiveProfile.PlateSolveSettings.Binning,
                 Coordinates = telescopeMediator.GetCurrentPosition(),
                 DownSampleFactor = profileService.ActiveProfile.PlateSolveSettings.DownSampleFactor,
