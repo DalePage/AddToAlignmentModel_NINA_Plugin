@@ -210,6 +210,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                     }
                 }
                 for (double nextAz = initialAzimuth; nextAz < initialAzimuth + 360.0 + (0.1 * azStep); nextAz += azStep) {
+                    if (token.IsCancellationRequested) break;
                     targetAz = nextAz < 360.0 ? nextAz : nextAz - 360.0;
 
                     for (double nextAlt = MinElevation; nextAlt <= MaxElevation; nextAlt += altStep) {
@@ -239,6 +240,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                             Notification.ShowWarning($"Target at Az: {targetAz}, Alt: {nextAlt} is below the horizon");
                         }
                     }
+                    if (token.IsCancellationRequested) break;
                 }
             } finally {
                 service.DelayedClose(new TimeSpan(0, 0, 10));
