@@ -3,7 +3,8 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local ="clr-namespace:ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems"
-    xmlns:view="clr-namespace:NINA.View.Sequencer;assembly=NINA.Sequencer">
+    xmlns:view="clr-namespace:NINA.View.Sequencer;assembly=NINA.Sequencer"
+    >
 
 
     <DataTemplate DataType="{x:Type local:CreateAlignmentModel}">
