@@ -162,7 +162,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
             }
         }
         public async Task ExecuteCreate() {
-            ExecuteCreate(new Progress<ApplicationStatus>(), CancelTokenSource.Token);
+            await ExecuteCreate(new Progress<ApplicationStatus>(), CancelTokenSource.Token);
         }
 
         public async Task ExecuteCreate(IProgress<ApplicationStatus> progress, CancellationToken token) {
@@ -210,6 +210,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
                     targetAz = nextAz < 360.0 ? nextAz : nextAz - 360.0;
 
                     for (double nextAlt = MinElevation; nextAlt <= MaxElevation; nextAlt += altStep) {
+                        if (token.IsCancellationRequested) break;
                         StepCount++;
                         altAzTarget = new TopocentricCoordinates(
                             Angle.ByDegree(targetAz),
@@ -237,6 +238,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
                             Notification.ShowWarning($"Target at Az: {targetAz}, Alt: {nextAlt} is below the horizon");
                         }
                     }
+                    if (token.IsCancellationRequested) break;
                 }
             } finally {
                 service.DelayedClose(new TimeSpan(0, 0, 10));
