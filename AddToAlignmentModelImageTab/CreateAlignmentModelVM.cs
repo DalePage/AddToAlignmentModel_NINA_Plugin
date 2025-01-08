@@ -1,10 +1,12 @@
-﻿using ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems;
+﻿using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json;
 using NINA.Astrometry;
 using NINA.Core.Enum;
 using NINA.Core.Locale;
 using NINA.Core.Model;
 using NINA.Core.Model.Equipment;
+using NINA.Core;
+using NinaCoreUtil = NINA.Core.Utility;
 using NINA.Core.Utility.Notification;
 using NINA.Core.Utility.WindowService;
 using NINA.Equipment.Equipment.MyTelescope;
@@ -14,10 +16,9 @@ using NINA.Equipment.Model;
 using NINA.PlateSolving;
 using NINA.PlateSolving.Interfaces;
 using NINA.Profile.Interfaces;
-using NINA.Sequencer.SequenceItem;
 using NINA.Sequencer.Validations;
-using NINA.WPF.Base.Interfaces.Mediator;
 using NINA.WPF.Base.ViewModel;
+using Nito.Mvvm;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -26,6 +27,10 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media.TextFormatting;
+using System.Diagnostics.Eventing.Reader;
+using NINA.Core.Utility;
+using System.Linq.Expressions;
 
 namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
     [Export(typeof(IDockableVM))]
@@ -46,9 +51,30 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
         private int _stepCount;
         private bool _isReadOnly;
         private int _solveAttempts;
-        private ObservableCollection<Coordinates> _ModelPoints;
-        public CancellationTokenSource CancelTokenSource;
+        private bool _IsPaused;
+        private bool _StopExecution;
 
+        public bool IsPaused {
+            get {
+                return _IsPaused;
+            }
+            set {
+                _IsPaused = value;
+                RaisePropertyChanged();
+            }
+
+        }
+
+        private ObservableCollection<Coordinates> _ModelPoints;
+        private CancellationTokenSource executeCTS;
+        private CancellationTokenSource pauseCTS;
+
+        public IAsyncRelayCommand StartCreate { get; }
+        public IAsyncRelayCommand StopCreate { get; }
+        public IRelayCommand PauseCreate { get; }
+        public IAsyncRelayCommand ResumeCreate { get; }
+
+        public bool CanExecute { get { return Validate(); } }
         public ObservableCollection<Coordinates> ModelPoints {
             get { return _ModelPoints; }
             set { _ModelPoints = value; }
@@ -145,12 +171,25 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
             NumberOfAzimuthPoints = 6;
             Title = "Alignment Model for CPWI";
             ModelPoints = new ObservableCollection<Coordinates>();
-            CancelTokenSource = new CancellationTokenSource();
-            //ModelPoints.Add(new Coordinates(Angle.ByHours(12.505), Angle.ByDegree(55.1234556), Epoch.JNOW));
-            //ModelPoints.Add(new Coordinates(Angle.ByHours(15.505), Angle.ByDegree(53.1234556), Epoch.JNOW));
+            executeCTS = new CancellationTokenSource();
+            StartCreate = new AsyncRelayCommand(ExecuteCreate);
+            PauseCreate = new AsyncRelayCommand(PauseCreation);
+            StopCreate = new AsyncRelayCommand(CancelCreation);
+            ResumeCreate = new AsyncRelayCommand(ResumeCreation);
+            telescopeMediator.Connected += ConnectionChange;
+            telescopeMediator.Disconnected += ConnectionChange;
+            cameraMediator.Connected += ConnectionChange;
+            cameraMediator.Disconnected += ConnectionChange;
 
         }
 
+        private Task ConnectionChange(object arg1, EventArgs arg2) {
+            RaisePropertyChanged(nameof(CanExecute));
+            if (!CanExecute) {
+                IsPaused = true;
+            }
+            return Task.CompletedTask;
+        }
 
         private IList<string> issues = [];
 
@@ -161,10 +200,33 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
                 RaisePropertyChanged();
             }
         }
-        public async Task ExecuteCreate() {
-            await ExecuteCreate(new Progress<ApplicationStatus>(), CancelTokenSource.Token);
+        public Task ExecuteCreate() {
+            Task createTask = ExecuteCreate(new Progress<ApplicationStatus>(), executeCTS.Token);
+            pauseCTS = new CancellationTokenSource();
+            return createTask;
         }
-
+        public Task PauseCreation() {
+            Task pTask = pauseTask();
+            IsPaused = true;
+            return pTask;
+        }
+        public async Task pauseTask() {
+            try {
+                while (IsPaused) {
+                    await Task.Delay(100000, pauseCTS.Token);
+                }
+            } catch (OperationCanceledException) { }
+            return;
+        }
+        public Task ResumeCreation() {
+            pauseCTS.Cancel();
+            IsPaused = false;
+            return Task.CompletedTask;
+        }
+        public Task CancelCreation() {
+            executeCTS.Cancel();
+            return Task.CompletedTask;
+        }
         public async Task ExecuteCreate(IProgress<ApplicationStatus> progress, CancellationToken token) {
             StepCount = 0;
             IsReadOnly = true;
@@ -193,8 +255,8 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
                     "Pre-Alignment",
                     MessageBoxButton.OKCancel);
 
-                if (boxResult != MessageBoxResult.OK) {
-                    throw new SequenceEntityFailedException($"Scope pe-alignemt to {hemisphere}ern horizon not confirmed");
+                if (boxResult != MessageBoxResult.OK || _StopExecution) {
+                    return;
                 }
                 if (Math.Abs(telescopeMediator.GetInfo().Azimuth - initialAzimuth) > 10.0 || Math.Abs(telescopeMediator.GetInfo().Altitude) > 10.0) {
                     MessageBoxResult boxResult1 = MessageBox.Show(
@@ -202,15 +264,18 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
                         "Scope not close to 0,0",
                         MessageBoxButton.OKCancel);
 
-                    if (boxResult1 != MessageBoxResult.OK) {
-                        throw new SequenceEntityFailedException($"Scope does not appear to be pointing where it thinks it should be.");
+                    if (boxResult1 != MessageBoxResult.OK || _StopExecution) {
+                        return;
                     }
                 }
+                StepCount = 0;
                 for (double nextAz = initialAzimuth; nextAz < initialAzimuth + 360.0 + (0.1 * azStep); nextAz += azStep) {
                     targetAz = nextAz < 360.0 ? nextAz : nextAz - 360.0;
-
+                    if (_StopExecution) break;
                     for (double nextAlt = MinElevation; nextAlt <= MaxElevation; nextAlt += altStep) {
-                        if (token.IsCancellationRequested) break;
+                        if (IsPaused) { await pauseTask(); }
+                        service.DelayedClose(new TimeSpan(0, 0, 10));
+                        if (_StopExecution) break;
                         StepCount++;
                         altAzTarget = new TopocentricCoordinates(
                             Angle.ByDegree(targetAz),
@@ -222,24 +287,32 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
                                 altAzTarget,
                                 profileService.ActiveProfile.AstrometrySettings.Horizon)) {
 
-                            Task[] taskList = [telescopeMediator.SlewToCoordinatesAsync(altAzTarget, token), service.Close()];
-                            Task.WaitAll(taskList, token);
-                            if (token.IsCancellationRequested) { return; }
+                            await telescopeMediator.SlewToCoordinatesAsync(altAzTarget, token);
+                            if (_StopExecution) break;
                             service.Show(PlateSolveStatusVM, Loc.Instance["Lbl_SequenceItem_Platesolving_SolveAndSync_Name"], System.Windows.ResizeMode.CanResize, System.Windows.WindowStyle.ToolWindow);
-                            PlateSolveResult result = await DoSolve(progress, token);
-                            if (!result.Success) {
-                                Notification.ShowWarning($"Plate solve failed at Az: {targetAz}, Alt: {nextAlt}");
+                            if (cameraMediator.GetInfo().Connected) {
+                                if (IsPaused) { await pauseTask(); }
+                                PlateSolveResult result = await DoSolve(progress, token);
+                                if (!result.Success) {
+                                    Notification.ShowWarning($"Plate solve failed at Az: {targetAz}, Alt: {nextAlt}");
+                                } else {
+                                    Coordinates resultCoordinates = result.Coordinates.Transform(Epoch.JNOW);
+                                    string addAlignmentResponse = telescopeMediator.Action("Telescope:AddAlignmentReference", $"{resultCoordinates.RA}:{resultCoordinates.Dec}");
+                                    ModelPoints.Add(resultCoordinates);
+                                }
                             } else {
-                                Coordinates resultCoordinates = result.Coordinates.Transform(Epoch.JNOW);
-                                string addAlignmentResponse = telescopeMediator.Action("Telescope:AddAlignmentReference", $"{resultCoordinates.RA}:{resultCoordinates.Dec}");
-                                ModelPoints.Add(resultCoordinates);
+                                ModelPoints.Add(telescopeMediator.GetInfo().Coordinates);
+
                             }
                         } else {
                             Notification.ShowWarning($"Target at Az: {targetAz}, Alt: {nextAlt} is below the horizon");
                         }
                     }
-                    if (token.IsCancellationRequested) break;
+                    if (_StopExecution) break;
                 }
+
+            } catch (OperationCanceledException) {
+                Notification.ShowWarning("Model buider cancelled");
             } finally {
                 service.DelayedClose(new TimeSpan(0, 0, 10));
                 IsReadOnly = false;
@@ -291,7 +364,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
             if (!cameraMediator.GetInfo().Connected) {
                 i.Add("Camera not connected");
             }
-
+            return true;
             Issues = i;
             return i.Count == 0;
         }

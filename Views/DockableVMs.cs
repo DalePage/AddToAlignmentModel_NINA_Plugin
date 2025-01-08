@@ -13,19 +13,5 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
         public AlignmentModelVM() {
             InitializeComponent();
         }
-        private void CreateModelClick(object sender, EventArgs e) {
-            try {
-                CreateAlignmentModelVM createAlignmentModelVM = (sender as Button).DataContext as CreateAlignmentModelVM;
-                createAlignmentModelVM.ExecuteCreate().GetAwaiter();
-            } catch { }
-        }
-        private void CancelModelClick(object sender, EventArgs e) {
-            try {
-                CreateAlignmentModelVM createAlignmentModelVM = (sender as Button).DataContext as CreateAlignmentModelVM;
-                createAlignmentModelVM.CancelTokenSource.Cancel();
-            } catch { }
-        }
-
     }
-
 }
