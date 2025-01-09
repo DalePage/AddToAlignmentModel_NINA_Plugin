@@ -193,8 +193,8 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
 
         private Task ConnectionChange(object arg1, EventArgs arg2) {
             RaisePropertyChanged(nameof(CanExecute));
-            if (!CanExecute) {
-                IsPaused = true;
+            if (!CanExecute && StartCreate.IsRunning) {
+                PauseCreation();
             }
             return Task.CompletedTask;
         }
