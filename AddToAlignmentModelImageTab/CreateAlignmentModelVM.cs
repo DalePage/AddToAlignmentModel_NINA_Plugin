@@ -15,6 +15,7 @@ using NINA.Equipment.Interfaces.ViewModel;
 using NINA.Equipment.Model;
 using NINA.PlateSolving;
 using NINA.PlateSolving.Interfaces;
+using NINA.Profile;
 using NINA.Profile.Interfaces;
 using NINA.Sequencer.Validations;
 using NINA.WPF.Base.ViewModel;
@@ -31,6 +32,7 @@ using System.Windows.Media.TextFormatting;
 using System.Diagnostics.Eventing.Reader;
 using NINA.Core.Utility;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
     [Export(typeof(IDockableVM))]
@@ -43,16 +45,10 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
         private IFilterWheelMediator filterWheelMediator;
         private IPlateSolverFactory plateSolverFactory;
         private IWindowServiceFactory windowServiceFactory;
-        private IProgress<ApplicationStatus> progress;
-        private int _numberOfAzimuthPoints;
-        private int _numberOfAltitudePoints;
-        private double _maxElevation;
-        private double _minElevation;
+        private PluginOptionsAccessor pluginSettings;
         private int _stepCount;
         private bool _isReadOnly;
-        private int _solveAttempts;
         private bool _IsPaused;
-        private bool _StopExecution;
 
         public bool IsPaused {
             get {
@@ -88,7 +84,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
         }
 
         public int TotalSteps {
-            get { return _numberOfAltitudePoints * _numberOfAzimuthPoints; }
+            get { return NumberOfAltitudePoints * NumberOfAzimuthPoints; }
         }
         public int StepCount {
             get { return _stepCount; }
@@ -97,53 +93,64 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
                 RaisePropertyChanged();
             }
         }
-
         [JsonProperty]
         public int NumberOfAzimuthPoints {
-            get { return _numberOfAzimuthPoints; }
+            get { return pluginSettings.GetValueInt32(nameof(NumberOfAzimuthPoints), 4); }
             set {
-                _numberOfAzimuthPoints = value;
-                RaisePropertyChanged("total_Steps");
-                RaisePropertyChanged();
+                if (value < 3) value = 3;
+                if (pluginSettings != null) {
+                    pluginSettings?.SetValueInt32(nameof(NumberOfAzimuthPoints), value);
+                    RaisePropertyChanged("TotalSteps");
+                    RaisePropertyChanged();
+                }
             }
         }
-
         [JsonProperty]
+
         public int NumberOfAltitudePoints {
-            get { return _numberOfAltitudePoints; }
+            get {
+                return pluginSettings.GetValueInt32(nameof(NumberOfAltitudePoints), 1);
+            }
             set {
-                _numberOfAltitudePoints = value;
-                RaisePropertyChanged(nameof(TotalSteps));
-                RaisePropertyChanged();
+                if (pluginSettings != null) {
+                    pluginSettings?.SetValueInt32(nameof(NumberOfAltitudePoints), value);
+                    RaisePropertyChanged(nameof(TotalSteps));
+                    RaisePropertyChanged();
+                }
             }
         }
-
         [JsonProperty]
+
         public double MaxElevation {
-            get { return _maxElevation; }
+            get { return pluginSettings.GetValueDouble(nameof(MaxElevation), 45.0); }
             set {
-                _maxElevation = value;
-                RaisePropertyChanged();
+                if (pluginSettings != null) {
+                    pluginSettings?.SetValueDouble(nameof(MaxElevation), value);
+                    RaisePropertyChanged();
+                }
             }
         }
-
         [JsonProperty]
+
         public double MinElevation {
-            get { return _minElevation; }
+            get { return pluginSettings.GetValueDouble(nameof(MinElevation), 45.0); }
             set {
-                _minElevation = value;
-                RaisePropertyChanged();
+                if (pluginSettings != null) {
+                    pluginSettings?.SetValueDouble(nameof(MinElevation), value);
+                    RaisePropertyChanged();
+                }
             }
         }
         [JsonProperty]
         public int SolveAttempts {
             get {
-                if (_solveAttempts > 0) return _solveAttempts;
-                return profileService.ActiveProfile.PlateSolveSettings.NumberOfAttempts;
+                return pluginSettings.GetValueInt32(nameof(SolveAttempts), profileService.ActiveProfile.PlateSolveSettings.NumberOfAttempts);
             }
             set {
-                _solveAttempts = value;
-                RaisePropertyChanged();
+                if (pluginSettings != null) {
+                    pluginSettings.SetValueInt32(nameof(SolveAttempts), value);
+                    RaisePropertyChanged();
+                }
             }
         }
         public PlateSolvingStatusVM PlateSolveStatusVM { get; } = new PlateSolvingStatusVM();
@@ -180,6 +187,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
             telescopeMediator.Disconnected += ConnectionChange;
             cameraMediator.Connected += ConnectionChange;
             cameraMediator.Disconnected += ConnectionChange;
+            pluginSettings = new PluginOptionsAccessor(profileServiceforBase, Guid.Parse(Assembly.GetExecutingAssembly().GetCustomAttribute<System.Runtime.InteropServices.GuidAttribute>().Value));
 
         }
 
@@ -190,6 +198,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
             }
             return Task.CompletedTask;
         }
+
 
         private IList<string> issues = [];
 
@@ -234,6 +243,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
             progress = PlateSolveStatusVM.CreateLinkedProgress(progress);
             try {
                 double altStep = 0;
+                if (Math.Abs(MaxElevation - MinElevation) < 5) NumberOfAltitudePoints = 1;
                 if (NumberOfAltitudePoints > 1) {
                     altStep = ((MaxElevation - MinElevation) / (NumberOfAltitudePoints - 1));
                 } else {
@@ -255,7 +265,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
                     "Pre-Alignment",
                     MessageBoxButton.OKCancel);
 
-                if (boxResult != MessageBoxResult.OK || _StopExecution) {
+                if (boxResult != MessageBoxResult.OK) {
                     return;
                 }
                 if (Math.Abs(telescopeMediator.GetInfo().Azimuth - initialAzimuth) > 10.0 || Math.Abs(telescopeMediator.GetInfo().Altitude) > 10.0) {
@@ -264,19 +274,16 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
                         "Scope not close to 0,0",
                         MessageBoxButton.OKCancel);
 
-                    if (boxResult1 != MessageBoxResult.OK || _StopExecution) {
+                    if (boxResult1 != MessageBoxResult.OK) {
                         return;
                     }
                 }
                 StepCount = 0;
                 for (double nextAz = initialAzimuth; nextAz < initialAzimuth + 360.0 + (0.1 * azStep); nextAz += azStep) {
                     targetAz = nextAz < 360.0 ? nextAz : nextAz - 360.0;
-                    if (_StopExecution) break;
                     for (double nextAlt = MinElevation; nextAlt <= MaxElevation; nextAlt += altStep) {
                         if (IsPaused) { await pauseTask(); }
                         service.DelayedClose(new TimeSpan(0, 0, 10));
-                        if (_StopExecution) break;
-                        StepCount++;
                         altAzTarget = new TopocentricCoordinates(
                             Angle.ByDegree(targetAz),
                             Angle.ByDegree(nextAlt),
@@ -288,7 +295,6 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
                                 profileService.ActiveProfile.AstrometrySettings.Horizon)) {
 
                             await telescopeMediator.SlewToCoordinatesAsync(altAzTarget, token);
-                            if (_StopExecution) break;
                             service.Show(PlateSolveStatusVM, Loc.Instance["Lbl_SequenceItem_Platesolving_SolveAndSync_Name"], System.Windows.ResizeMode.CanResize, System.Windows.WindowStyle.ToolWindow);
                             if (cameraMediator.GetInfo().Connected) {
                                 if (IsPaused) { await pauseTask(); }
@@ -307,12 +313,12 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
                         } else {
                             Notification.ShowWarning($"Target at Az: {targetAz}, Alt: {nextAlt} is below the horizon");
                         }
+                        StepCount++;
                     }
-                    if (_StopExecution) break;
                 }
 
             } catch (OperationCanceledException) {
-                Notification.ShowWarning("Model buider cancelled");
+                Notification.ShowWarning("Alignment model buider cancelled");
             } finally {
                 service.DelayedClose(new TimeSpan(0, 0, 10));
                 IsReadOnly = false;
@@ -364,7 +370,6 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
             if (!cameraMediator.GetInfo().Connected) {
                 i.Add("Camera not connected");
             }
-            return true;
             Issues = i;
             return i.Count == 0;
         }
