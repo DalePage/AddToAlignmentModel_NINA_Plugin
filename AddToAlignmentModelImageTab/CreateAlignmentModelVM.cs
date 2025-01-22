@@ -260,23 +260,19 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
                     hemisphere = "south";
                     initialAzimuth = 180.0;
                 }
+                string checkStartPoint = $"Please ensure the scope is roughly pointing at the horizon due {hemisphere}";
+                string checkStartPointHeader = "Pre-Alignment";
+                if (Math.Abs(telescopeMediator.GetInfo().Azimuth - initialAzimuth) > 10.0 || Math.Abs(telescopeMediator.GetInfo().Altitude) > 10.0) {
+                    checkStartPoint = $"Scope thinks it is pointing to Az: {telescopeMediator.GetInfo().Azimuth}, Alt: {telescopeMediator.GetInfo().Altitude}. \nPlease confirm this is approximately correct!";
+                    checkStartPointHeader = "Scope not close to 0,0";
+                }
                 MessageBoxResult boxResult = MessageBox.Show(
-                    $"Please ensure the scope is roughly pointing at the horizon due {hemisphere}",
-                    "Pre-Alignment",
+                    checkStartPoint,
+                    checkStartPointHeader,
                     MessageBoxButton.OKCancel);
 
                 if (boxResult != MessageBoxResult.OK) {
                     return;
-                }
-                if (Math.Abs(telescopeMediator.GetInfo().Azimuth - initialAzimuth) > 10.0 || Math.Abs(telescopeMediator.GetInfo().Altitude) > 10.0) {
-                    MessageBoxResult boxResult1 = MessageBox.Show(
-                        $"Scope thinks it is pointing to Az: {telescopeMediator.GetInfo().Azimuth}, Alt: {telescopeMediator.GetInfo().Altitude}",
-                        "Scope not close to 0,0",
-                        MessageBoxButton.OKCancel);
-
-                    if (boxResult1 != MessageBoxResult.OK) {
-                        return;
-                    }
                 }
                 StepCount = 0;
                 for (double nextAz = initialAzimuth; nextAz < initialAzimuth + 360.0 + (0.1 * azStep); nextAz += azStep) {

@@ -74,6 +74,16 @@ namespace ADPUK.NINA.AddToAlignmentModel {
             }
         }
 
+        public int NumberOfAzimuthPoints {
+            get { return pluginSettings.GetValueInt32(nameof(NumberOfAzimuthPoints), 4); }
+            set {
+                pluginSettings.SetValueInt32(nameof(NumberOfAzimuthPoints), value);
+                RaisePropertyChanged("total_Steps");
+                RaisePropertyChanged();
+            }
+        }
+
+
         public event PropertyChangedEventHandler PropertyChanged;
         protected void RaisePropertyChanged([CallerMemberName] string propertyName = null) {
             this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

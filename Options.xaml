@@ -11,12 +11,12 @@
     <DataTemplate x:Key="Add To Alignment Model_Options">
         <StackPanel Orientation="Vertical">
             <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Default Notification Message" />
-                <TextBox MinWidth="50" Text="{Binding DefaultNotificationMessage}" />
+                <TextBlock Text="Mumber of Azimuth Points" />
+                <TextBox MinWidth="10" Text="{Binding NumberOfAzimuthPoints}" />
             </StackPanel>
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="Profile Specific Notification Message" />
-                <TextBox MinWidth="50" Text="{Binding ProfileSpecificNotificationMessage}" />
+                <TextBox MinWidth="10" Text="{Binding ProfileSpecificNotificationMessage}" />
             </StackPanel>
         </StackPanel>
     </DataTemplate>
