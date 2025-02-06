@@ -193,8 +193,8 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                     initialAzimuth = 180.0;
                 }
                 MessageBoxResult boxResult = MessageBox.Show(
-                    $"Please ensure the scope is roughly pointing at the horizon due {hemisphere}", 
-                    "Pre-Alignment", 
+                    $"Please ensure the scope is roughly pointing at the horizon due {hemisphere}",
+                    "Pre-Alignment",
                     MessageBoxButton.OKCancel);
 
                 if (boxResult != MessageBoxResult.OK) {
@@ -202,8 +202,8 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                 }
                 if (Math.Abs(telescopeMediator.GetInfo().Azimuth - initialAzimuth) > 10.0 || Math.Abs(telescopeMediator.GetInfo().Altitude) > 10.0) {
                     MessageBoxResult boxResult1 = MessageBox.Show(
-                        $"Scope thinks it is pointing to Az: {telescopeMediator.GetInfo().Azimuth}, Alt: {telescopeMediator.GetInfo().Altitude}", 
-                        "Scope not close to 0,0" ,
+                        $"Scope thinks it is pointing to Az: {telescopeMediator.GetInfo().Azimuth}, Alt: {telescopeMediator.GetInfo().Altitude}",
+                        "Scope not close to 0,0",
                         MessageBoxButton.OKCancel);
 
                     if (boxResult1 != MessageBoxResult.OK) {

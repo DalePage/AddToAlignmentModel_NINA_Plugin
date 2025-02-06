@@ -5,8 +5,6 @@ using NINA.Core.Enum;
 using NINA.Core.Locale;
 using NINA.Core.Model;
 using NINA.Core.Model.Equipment;
-using NINA.Core;
-using NinaCoreUtil = NINA.Core.Utility;
 using NINA.Core.Utility.Notification;
 using NINA.Core.Utility.WindowService;
 using NINA.Equipment.Equipment.MyTelescope;
@@ -19,21 +17,16 @@ using NINA.Profile;
 using NINA.Profile.Interfaces;
 using NINA.Sequencer.Validations;
 using NINA.WPF.Base.ViewModel;
-using Nito.Mvvm;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
+using System.Reflection;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Media.TextFormatting;
-using System.Diagnostics.Eventing.Reader;
-using NINA.Core.Utility;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text.RegularExpressions;
 
 namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
     [Export(typeof(IDockableVM))]
