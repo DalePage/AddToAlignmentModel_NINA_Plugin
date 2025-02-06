@@ -33,6 +33,7 @@ using System.Diagnostics.Eventing.Reader;
 using NINA.Core.Utility;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
     [Export(typeof(IDockableVM))]
@@ -361,7 +362,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
             if (!scopeInfo.Connected) {
                 i.Add(Loc.Instance["LblTelescopeNotConnected"]);
             }
-            if (scopeInfo.Name != "CPWI") {
+            if (!Regex.IsMatch(scopeInfo.Name, "CPWI", RegexOptions.IgnoreCase)) {
                 i.Add("Only works with CPWI scopes");
             }
             if (scopeInfo.AlignmentMode != AlignmentMode.AltAz) {
