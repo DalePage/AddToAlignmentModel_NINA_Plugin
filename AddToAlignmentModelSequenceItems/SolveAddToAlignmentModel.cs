@@ -142,7 +142,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
             if (!scopeInfo.Connected) {
                 i.Add(Loc.Instance["LblTelescopeNotConnected"]);
             }
-            if (!Regex.IsMatch(scopeInfo.Name, "CPWI", RegexOptions.IgnoreCase)) { 
+            if (!Regex.IsMatch(scopeInfo.Name ?? "", "CPWI", RegexOptions.IgnoreCase)) { 
                 i.Add("Only works with CPWI scopes");
             } 
             if (scopeInfo.AlignmentMode != AlignmentMode.AltAz) {
