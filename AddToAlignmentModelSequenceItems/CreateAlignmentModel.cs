@@ -22,6 +22,8 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Text.RegularExpressions;
+using Xceed.Wpf.Toolkit.PropertyGrid.Editors;
 
 namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
     [ExportMetadata("Name", "Create Alignement Model")]
@@ -209,8 +211,11 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                         throw new SequenceEntityFailedException($"Scope does not appear to be pointing where it thinks it should be.");
                     }
                 }
-                for (double nextAz = initialAzimuth; nextAz < initialAzimuth + 360.0 + (0.1 * azStep); nextAz += azStep) {
+                int azCount = 0;
+                double nextAz = initialAzimuth;
+                while (azCount < NumberOfAzimuthPoints) {
                     if (token.IsCancellationRequested) break;
+                    if (Math.Abs(initialAzimuth - nextAz) < 10) break;
                     targetAz = nextAz < 360.0 ? nextAz : nextAz - 360.0;
 
                     for (double nextAlt = MinElevation; nextAlt <= MaxElevation; nextAlt += altStep) {
@@ -241,6 +246,9 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                         }
                     }
                     if (token.IsCancellationRequested) break;
+                    nextAz += azStep;
+                    azCount++;
+                    if (nextAz > 360.0) nextAz = nextAz - 360.0; 
                 }
             } finally {
                 service.DelayedClose(new TimeSpan(0, 0, 10));
@@ -284,7 +292,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
             if (!scopeInfo.Connected) {
                 i.Add(Loc.Instance["LblTelescopeNotConnected"]);
             }
-            if (scopeInfo.Name != "CPWI") {
+            if (!Regex.IsMatch(scopeInfo.Name ?? "", "CPWI")) {
                 i.Add("Only works with CPWI scopes");
             }
             if (scopeInfo.AlignmentMode != AlignmentMode.AltAz) {

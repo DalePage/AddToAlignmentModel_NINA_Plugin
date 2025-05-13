@@ -82,6 +82,39 @@ namespace ADPUK.NINA.AddToAlignmentModel {
                 RaisePropertyChanged();
             }
         }
+        public int NumberOfAltitudePoints {
+            get { return pluginSettings.GetValueInt32(nameof(NumberOfAltitudePoints), 2); }
+            set {
+                pluginSettings.SetValueInt32(nameof(NumberOfAltitudePoints), value);
+                RaisePropertyChanged("total_Steps");
+                RaisePropertyChanged();
+            }
+        }
+        public double MaxElevation {
+            get { return pluginSettings.GetValueDouble(nameof(MaxElevation), 80.0); }
+            set {
+                pluginSettings.SetValueDouble(nameof(MaxElevation), value);
+                RaisePropertyChanged("total_Steps");
+                RaisePropertyChanged();
+            }
+        }
+
+        public double MinElevation {
+            get { return pluginSettings.GetValueDouble(nameof(MinElevation), 35.0); }
+            set {
+                pluginSettings.SetValueDouble(nameof(MinElevation), value);
+                RaisePropertyChanged("total_Steps");
+                RaisePropertyChanged();
+            }
+        }
+        public int SolveAttempts {
+            get { return pluginSettings.GetValueInt32(nameof(SolveAttempts), 1); }
+            set { 
+                pluginSettings.SetValueInt32(nameof(SolveAttempts), value);
+                RaisePropertyChanged();
+            }
+            
+        }
 
 
         public event PropertyChangedEventHandler PropertyChanged;

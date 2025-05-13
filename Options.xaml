@@ -11,12 +11,24 @@
     <DataTemplate x:Key="Add To Alignment Model_Options">
         <StackPanel Orientation="Vertical">
             <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Mumber of Azimuth Points" />
-                <TextBox MinWidth="10" Text="{Binding NumberOfAzimuthPoints}" />
+                <TextBlock Text="Mumber of Azimuth Points:" Margin="10,0,10,0"/>
+                <TextBox MinWidth="30" Text="{Binding NumberOfAzimuthPoints}" HorizontalAlignment="Center" />
             </StackPanel>
             <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Profile Specific Notification Message" />
-                <TextBox MinWidth="10" Text="{Binding ProfileSpecificNotificationMessage}" />
+                <TextBlock Text="Number of Altitude Points:" Margin="10,0,10,0" />
+                <TextBox MinWidth="30" Text="{Binding NumberOfAltitudePoints}" HorizontalAlignment="Center" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Minimum Altitude:" Margin="10,0,10,0"/>
+                <TextBox MinWidth="30" Text="{Binding MinElevation}" HorizontalAlignment="Center" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Maximum Altitude:" Margin="10,0,10,0" />
+                <TextBox MinWidth="30" Text="{Binding MaxElevation}" HorizontalAlignment="Center" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Maximum Solve Attempts:" Margin="10,0,10,0" />
+                <TextBox MinWidth="30" Text="{Binding SolveAttempts}" HorizontalAlignment="Center" />
             </StackPanel>
         </StackPanel>
     </DataTemplate>

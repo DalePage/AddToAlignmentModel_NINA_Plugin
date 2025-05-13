@@ -10,9 +10,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyFileVersion("1.0.0.1")]
 
 // [MANDATORY] The name of your plugin
-[assembly: AssemblyTitle("Add To Alignment Model")]
+[assembly: AssemblyTitle("Add To CPWI Alt-Az Alignment Model")]
 // [MANDATORY] A short description of your plugin
-[assembly: AssemblyDescription("Update mount alignment model")]
+[assembly: AssemblyDescription("This plugin is designed to work with Celestron AZ mounts connected via CPWI.\nIf it cannot detect a suitable mount then its functions will be disabled.")]
 
 // The following attributes are not required for the plugin per se, but are required by the official manifest meta data
 
@@ -38,7 +38,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyMetadata("Homepage", "https://mypluginwebsite.com/")]
 
 //[Optional] Common tags that quickly describe your plugin
-[assembly: AssemblyMetadata("Tags", "")]
+[assembly: AssemblyMetadata("Tags", "Celestron CPWI Alignment AltAz Alt-Az AZ")]
 
 //[Optional] A link that will show a log of all changes in between your plugin's versions
 [assembly: AssemblyMetadata("ChangelogURL", "https://mypluginsourcerepo.com/project/CHANGELOG.md")]

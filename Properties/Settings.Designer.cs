@@ -37,13 +37,25 @@ namespace ADPUK.NINA.AddToAlignmentModel.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("This is a notification")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Adding to telescope alignment model")]
         public string DefaultNotificationMessage {
             get {
                 return ((string)(this["DefaultNotificationMessage"]));
             }
             set {
                 this["DefaultNotificationMessage"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public string Setting {
+            get {
+                return ((string)(this["Setting"]));
+            }
+            set {
+                this["Setting"] = value;
             }
         }
     }

@@ -28,6 +28,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Text.RegularExpressions;
 using System.Windows.Media.TextFormatting;
 using System.Diagnostics.Eventing.Reader;
 using NINA.Core.Utility;
@@ -357,7 +358,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
             if (!scopeInfo.Connected) {
                 i.Add(Loc.Instance["LblTelescopeNotConnected"]);
             }
-            if (scopeInfo.Name != "CPWI") {
+            if (!Regex.IsMatch(scopeInfo.Name ?? "", "CPWI")) {
                 i.Add("Only works with CPWI scopes");
             }
             if (scopeInfo.AlignmentMode != AlignmentMode.AltAz) {
