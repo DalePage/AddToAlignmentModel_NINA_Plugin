@@ -240,6 +240,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                             } else {
                                 Coordinates resultCoordinates = result.Coordinates.Transform(Epoch.JNOW);
                                 string addAlignmentResponse = telescopeMediator.Action("Telescope:AddAlignmentReference", $"{resultCoordinates.RA}:{resultCoordinates.Dec}");
+                                nextAz = telescopeMediator.GetInfo().Azimuth;
                             }
                         } else {
                             Notification.ShowWarning($"Target at Az: {targetAz}, Alt: {nextAlt} is below the horizon");
@@ -248,7 +249,6 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                     if (token.IsCancellationRequested) break;
                     nextAz += azStep;
                     azCount++;
-                    if (nextAz > 360.0) nextAz = nextAz - 360.0; 
                 }
             } finally {
                 service.DelayedClose(new TimeSpan(0, 0, 10));
