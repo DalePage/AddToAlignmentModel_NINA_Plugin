@@ -215,7 +215,6 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                 double nextAz = initialAzimuth;
                 while (azCount < NumberOfAzimuthPoints) {
                     if (token.IsCancellationRequested) break;
-                    if (Math.Abs(initialAzimuth - nextAz) < 10) break;
                     targetAz = nextAz < 360.0 ? nextAz : nextAz - 360.0;
 
                     for (double nextAlt = MinElevation; nextAlt <= MaxElevation; nextAlt += altStep) {
