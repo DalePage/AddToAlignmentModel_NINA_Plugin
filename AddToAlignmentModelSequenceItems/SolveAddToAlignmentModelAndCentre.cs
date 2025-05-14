@@ -1,5 +1,4 @@
-﻿using Accord.IO;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using NINA.Astrometry;
 using NINA.Core.Enum;
 using NINA.Core.Locale;
@@ -9,7 +8,6 @@ using NINA.Core.Utility.Notification;
 using NINA.Core.Utility.WindowService;
 using NINA.Equipment.Interfaces;
 using NINA.Equipment.Interfaces.Mediator;
-using NINA.Equipment.Interfaces.ViewModel;
 using NINA.Equipment.Model;
 using NINA.PlateSolving;
 using NINA.PlateSolving.Interfaces;
@@ -17,12 +15,10 @@ using NINA.Profile.Interfaces;
 using NINA.Sequencer.SequenceItem;
 using NINA.Sequencer.Validations;
 using NINA.WPF.Base.ViewModel;
-using NINA.WPF.Base.ViewModel.Equipment.Dome;
-using NINA.WPF.Base.ViewModel.Equipment.Focuser;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Runtime.Intrinsics.Arm;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
@@ -188,7 +184,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
             if (!scopeInfo.Connected) {
                 i.Add(Loc.Instance["LblTelescopeNotConnected"]);
             }
-            if (!Regex.IsMatch(scopeInfo.Name ?? "", "CPWI")) {
+            if (!Regex.IsMatch(scopeInfo.Name ?? "", "CPWI", RegexOptions.IgnoreCase)) {
                 i.Add("Only works with CPWI scopes");
             }
             if (scopeInfo.AlignmentMode != AlignmentMode.AltAz) {

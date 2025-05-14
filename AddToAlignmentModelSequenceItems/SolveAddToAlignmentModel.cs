@@ -142,16 +142,16 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
             if (!scopeInfo.Connected) {
                 i.Add(Loc.Instance["LblTelescopeNotConnected"]);
             }
-            if (!Regex.IsMatch(scopeInfo.Name ?? "", "CPWI")) {
+            if (!Regex.IsMatch(scopeInfo.Name ?? "", "CPWI", RegexOptions.IgnoreCase)) {
                 i.Add("Only works with CPWI scopes");
-            } 
+            }
             if (scopeInfo.AlignmentMode != AlignmentMode.AltAz) {
                 i.Add("Only works with AltAz mounts");
             }
             if (!cameraMediator.GetInfo().Connected) {
                 i.Add("Camera not connected");
             }
-            
+
             Issues = i;
             return i.Count == 0;
         }
