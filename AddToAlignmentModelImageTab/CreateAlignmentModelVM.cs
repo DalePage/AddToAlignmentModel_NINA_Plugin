@@ -27,12 +27,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Text.RegularExpressions;
-using System.Windows.Media.TextFormatting;
-using System.Diagnostics.Eventing.Reader;
-using NINA.Core.Utility;
-using System.Linq.Expressions;
-using System.Reflection;
 
 namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
     [Export(typeof(IDockableVM))]
@@ -284,13 +278,14 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
                             Angle.ByDegree(targetAz),
                             Angle.ByDegree(nextAlt),
                             Angle.ByDegree(telescopeInfo.SiteLatitude),
-                            Angle.ByDegree(telescopeInfo.SiteLongitude)
+                            Angle.ByDegree(telescopeInfo.SiteLongitude),
+                            telescopeInfo.SiteElevation
                             );
                         if (ADP_Tools.AboveHorizon(
                                 altAzTarget,
                                 profileService.ActiveProfile.AstrometrySettings.Horizon)) {
 
-                            await telescopeMediator.SlewToCoordinatesAsync(altAzTarget, token);
+                            await telescopeMediator.SlewToCoordinatesAsync(altAzTarget.Transform(Epoch.JNOW), token);
                             service.Show(PlateSolveStatusVM, Loc.Instance["Lbl_SequenceItem_Platesolving_SolveAndSync_Name"], System.Windows.ResizeMode.CanResize, System.Windows.WindowStyle.ToolWindow);
                             if (cameraMediator.GetInfo().Connected) {
                                 if (IsPaused) { await pauseTask(); }

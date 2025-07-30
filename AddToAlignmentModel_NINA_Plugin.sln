@@ -7,10 +7,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AddToAlignmentModel_NINA_Pl
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		BuildOnly|Any CPU = BuildOnly|Any CPU
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{94DD374D-8EFF-4FBB-A9E6-261CEBC897CB}.BuildOnly|Any CPU.ActiveCfg = BuildOnly|Any CPU
+		{94DD374D-8EFF-4FBB-A9E6-261CEBC897CB}.BuildOnly|Any CPU.Build.0 = BuildOnly|Any CPU
 		{94DD374D-8EFF-4FBB-A9E6-261CEBC897CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{94DD374D-8EFF-4FBB-A9E6-261CEBC897CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{94DD374D-8EFF-4FBB-A9E6-261CEBC897CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
