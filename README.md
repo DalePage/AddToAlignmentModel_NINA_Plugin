@@ -1,8 +1,20 @@
 ﻿# Add To Alignment Model for CPWI Alt-Az Mounts
-This plug-in can be used to create an alignment model for users of CPWI controlled Alt-Az mounts.
+This plug-in can be used to create, or add to, an alignment model for users of CPWI controlled Alt-Az mounts.
 
+## Why?
+The plugin came about due to eye health challenges making it very difficult to use the red dot finder to pick alignment
+stars for centring in an eye piece or image. Using this plugin makes it possible to generate an alignment model within
+CPWI without any visual observing. 
+
+Having a good alignment model improves mount tracking greatly reducing the number of recentreing actions in sequences.
+
+## Brief explanation
 The user can select the number of points in both Azimuth and Altitude. Once triggered the mount is moved to the selected
 cordinates and an image obtained and plate solved with the actual RA/Dec then fed back to CPWI as an alignment location.
 
+Also included are sequencer actions to plate solve an image and update the alignment model. From my understanding
+of various forum posts and observations the mount "Sync" command in CPWI does not update the alignment model and this is an attempt
+to overcome this challenge. Potentially these could be called from a trigger but I have not yet had time to do that yet.
+
 The plugin has been developed and tested using CPWI with a Celestron Astro-Fi 6 mount and scope. It is beleived it will 
-work with other CPWI controlled Alt Azimuth mounts but it cannot be guranteed. 
+work with other CPWI controlled Alt Azimuth mounts but it cannot be guranteed.

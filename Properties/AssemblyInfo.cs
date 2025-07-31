@@ -38,7 +38,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyMetadata("Homepage", "")]
 
 //[Optional] Common tags that quickly describe your plugin
-[assembly: AssemblyMetadata("Tags", "Celestron CPWI Alignment AltAz Alt-Az AZ")]
+[assembly: AssemblyMetadata("Tags", "Celestron CPWI Alignment Model AltAz Alt-Az AZ")]
 
 //[Optional] A link that will show a log of all changes in between your plugin's versions
 [assembly: AssemblyMetadata("ChangelogURL", "")]
@@ -50,7 +50,18 @@ using System.Runtime.InteropServices;
 //[Optional] An additional url to an example example screenshot of your plugin in action
 [assembly: AssemblyMetadata("AltScreenshotURL", "")]
 //[Optional] An in-depth description of your plugin
-[assembly: AssemblyMetadata("LongDescription", @"")]
+[assembly: AssemblyMetadata("LongDescription", @"This plug-in appears in the imaging tab and can be used to create, or add to, 
+an alignment model for users of CPWI controlled Alt-Az mounts.
+
+The user can select the number of points in both Azimuth and Altitude. Once triggered the mount is moved to the selected
+cordinates and an image obtained and plate solved with the actual RA/Dec then fed back to CPWI as an alignment location.
+
+Also included are sequencer actions to plate solve an image and update the alignment model. From my understanding
+of various forum posts and observations the mount ""Sync"" command in CPWI does not update the alignment model and this is an attempt
+to overcome this challenge. Potentially these could be called from a trigger but I have not yet had time to do that yet.
+
+The plugin has been developed and tested using CPWI with a Celestron Astro-Fi 6 mount and scope. It is beleived it will 
+work with other CPWI controlled Alt Azimuth mounts but it cannot be guranteed.")]
 
 // Setting ComVisible to false makes the types in this assembly not visible
 // to COM components.  If you need to access a type in this assembly from
