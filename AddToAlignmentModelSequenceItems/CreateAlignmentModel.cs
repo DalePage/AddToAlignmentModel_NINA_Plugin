@@ -23,8 +23,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Text.RegularExpressions;
-using Xceed.Wpf.Toolkit.PropertyGrid.Editors;
 
 namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
     [ExportMetadata("Name", "Create Alignement Model")]
@@ -224,13 +222,14 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                             Angle.ByDegree(targetAz),
                             Angle.ByDegree(nextAlt),
                             Angle.ByDegree(telescopeInfo.SiteLatitude),
-                            Angle.ByDegree(telescopeInfo.SiteLongitude)
+                            Angle.ByDegree(telescopeInfo.SiteLongitude),
+                            telescopeInfo.SiteElevation
                             );
                         if (ADP_Tools.AboveHorizon(
                                 altAzTarget,
                                 profileService.ActiveProfile.AstrometrySettings.Horizon)) {
 
-                            Task[] taskList = [telescopeMediator.SlewToCoordinatesAsync(altAzTarget, token), service.Close()];
+                            Task[] taskList = [telescopeMediator.SlewToCoordinatesAsync(altAzTarget.Transform(Epoch.JNOW), token), service.Close()];
                             Task.WaitAll(taskList, token);
                             if (token.IsCancellationRequested) { return; }
                             service.Show(PlateSolveStatusVM, Loc.Instance["Lbl_SequenceItem_Platesolving_SolveAndSync_Name"], System.Windows.ResizeMode.CanResize, System.Windows.WindowStyle.ToolWindow);
