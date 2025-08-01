@@ -26,6 +26,7 @@ env:
   PLUGIN_DLL_NAME: "ADPUK.NINA.AddToAlignmentModel"
   # The relative path to your manifest folder inside the manifest repository
   PLUGIN_MANIFEST_PATH: "a/AddToCPWIAlignmentModel"
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN}}
 
 jobs:
   build-and-release:
