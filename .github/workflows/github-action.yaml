@@ -14,7 +14,8 @@ on:
     tags:
       - '[0-9]+.[0-9]+.[0-9]+.[0-9]+'
 
-permissions: write-all
+permissions:
+  contents: write
 
 env:
   # Adjust this to your plugin title
@@ -112,7 +113,6 @@ jobs:
 
       - name: Clone manifest
         run: |
-          echo GH_TOKEN
           git clone https://x-access-token:${{ secrets.PAT }}@github.com/${{ github.repository_owner }}/nina.plugin.manifests.git
           cd nina.plugin.manifests
           git config user.name "github-actions[bot]"
