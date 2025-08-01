@@ -26,7 +26,7 @@ env:
   PLUGIN_DLL_NAME: "ADPUK.NINA.AddToAlignmentModel"
   # The relative path to your manifest folder inside the manifest repository
   PLUGIN_MANIFEST_PATH: "a/AddToCPWIAlignmentModel"
-  GH_TOKEN: ${{ secrets.PAT }}
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   build-and-release:
@@ -100,6 +100,9 @@ jobs:
 
   publish-manifest:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
     needs: [check-repo-exists, build-and-release]
     if: needs.check-repo-exists.outputs.exists == 'true'
     steps:
