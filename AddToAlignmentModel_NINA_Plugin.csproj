@@ -14,6 +14,17 @@
     <PackageReference Include="NINA.Plugin" Version="3.2.0.2001-beta" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Update="Locales\ViewStrings.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ViewStrings.resx</DependentUpon>
+      <Generator></Generator>
+    </Compile>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Update="Properties\Settings.Designer.cs">
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <AutoGen>True</AutoGen>
@@ -28,6 +39,16 @@
   </ItemGroup>
   <ItemGroup>
     <None Include=".github\workflows\github-action.yaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="Locales\ViewStrings.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>ViewStrings.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup />
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

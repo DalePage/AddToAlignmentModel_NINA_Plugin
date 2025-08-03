@@ -11,6 +11,7 @@ using NINA.Equipment.Interfaces.Mediator;
 using NINA.Equipment.Model;
 using NINA.PlateSolving;
 using NINA.PlateSolving.Interfaces;
+using NINA.Profile;
 using NINA.Profile.Interfaces;
 using NINA.Sequencer.SequenceItem;
 using NINA.Sequencer.Validations;
@@ -18,6 +19,7 @@ using NINA.WPF.Base.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,7 +27,7 @@ using System.Threading.Tasks;
 namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
     [ExportMetadata("Name", "Solve and Add to Alignment Model and Centre")]
     [ExportMetadata("Description", "The instruction carries out a plate solve and adds the computed location to the mount's alignment model and " +
-        "then slews to the original target and repeats until within alignment platesolve tolerance")]
+        "then slews to the original target and repeats until within the alignment platesolve tolerance")]
     [ExportMetadata("Icon", "CrosshairSVG")]
     [ExportMetadata("Category", "Add To CPWI Alignment Model")]
     [Export(typeof(ISequenceItem))]
@@ -44,6 +46,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         private int _maximumAttempts;
         private int _attemptCount;
         public PlateSolvingStatusVM PlateSolveStatusVM { get; } = new PlateSolvingStatusVM();
+        private PluginOptionsAccessor pluginSettings; 
 
         [JsonProperty]
         public int MaximumAttemptsToCentre {
@@ -82,6 +85,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
             this.cameraMediator = cameraMediator;
             this.domeMediator = domeMediator;
             this.domeFollower = domeFollower;
+            this.pluginSettings = new PluginOptionsAccessor(profileService, Guid.Parse(Assembly.GetExecutingAssembly().GetCustomAttribute<System.Runtime.InteropServices.GuidAttribute>().Value));
             MaximumAttemptsToCentre = 4;
         }
 
@@ -125,9 +129,10 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                 bool isAboveHorizon;
                 do {
                     AttemptCount++;
-                    isAboveHorizon = ADP_Tools.AboveHorizon(telescopeMediator.GetCurrentPosition(),
+                    isAboveHorizon = ADP_Tools.AboveMinAlt(telescopeMediator.GetCurrentPosition(),
                             profileService.ActiveProfile.AstrometrySettings.Horizon,
-                            profileService.ActiveProfile.AstrometrySettings.Latitude);
+                            profileService.ActiveProfile.AstrometrySettings.Latitude,
+                            pluginSettings.GetValueDouble(nameof(AddToAlignmentModel.MinElevationAboveHorizon), 5.0));
                     if (isAboveHorizon) {
                         PlateSolveResult result = await DoSolve(progress, token);
                         if (!result.Success) {
@@ -178,23 +183,8 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         }
 
         public virtual bool Validate() {
-            var i = new List<string>();
-            var scopeInfo = telescopeMediator.GetInfo();
-            if (!scopeInfo.Connected) {
-                i.Add(Loc.Instance["LblTelescopeNotConnected"]);
-            }
-            if (!Regex.IsMatch(scopeInfo.Name ?? "", "CPWI", RegexOptions.IgnoreCase)) {
-                i.Add("Only works with CPWI scopes");
-            }
-            if (scopeInfo.AlignmentMode != AlignmentMode.AltAz) {
-                i.Add("Only works with AltAz mounts");
-            }
-            if (!cameraMediator.GetInfo().Connected) {
-                i.Add("Camera not connected");
-            }
-
-            Issues = i;
-            return i.Count == 0;
+            Issues = ADP_Tools.ValidateConnections(telescopeMediator.GetInfo(), cameraMediator.GetInfo(),pluginSettings);
+            return Issues.Count == 0;
         }
 
 

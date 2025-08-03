@@ -10,6 +10,8 @@ using NINA.Equipment.Interfaces.Mediator;
 using NINA.Equipment.Model;
 using NINA.PlateSolving;
 using NINA.PlateSolving.Interfaces;
+using NINA.Plugin.Interfaces;
+using NINA.Profile;
 using NINA.Profile.Interfaces;
 using NINA.Sequencer.SequenceItem;
 using NINA.Sequencer.Validations;
@@ -17,9 +19,11 @@ using NINA.WPF.Base.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using ADPUK.NINA.AddToAlignmentModel.Locales;
 
 namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
     [ExportMetadata("Name", "Solve and Add to Alignment Model")]
@@ -37,6 +41,9 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         private IPlateSolverFactory plateSolverFactory;
         private IWindowServiceFactory windowServiceFactory;
         private ICameraMediator cameraMediator;
+       
+        private IPluginOptionsAccessor pluginSettings
+            ;
         public PlateSolvingStatusVM PlateSolveStatusVM { get; } = new PlateSolvingStatusVM();
 
         [ImportingConstructor]
@@ -48,6 +55,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                             IPlateSolverFactory plateSolverFactory,
                             IWindowServiceFactory windowServiceFactory,
                             ICameraMediator cameraMediator) {
+
             this.profileService = profileService;
             this.telescopeMediator = telescopeMediator;
             this.rotatorMediator = rotatorMediator;
@@ -56,6 +64,8 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
             this.plateSolverFactory = plateSolverFactory;
             this.windowServiceFactory = windowServiceFactory;
             this.cameraMediator = cameraMediator;
+            this.pluginSettings = new PluginOptionsAccessor(profileService, Guid.Parse(Assembly.GetExecutingAssembly().GetCustomAttribute<System.Runtime.InteropServices.GuidAttribute>().Value));
+
         }
 
         private SolveAddToAlignmentModel(SolveAddToAlignmentModel cloneMe) : this(cloneMe.profileService,
@@ -89,9 +99,11 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
             progress = PlateSolveStatusVM.CreateLinkedProgress(progress);
             service.Show(PlateSolveStatusVM, Loc.Instance["Lbl_SequenceItem_Platesolving_SolveAndSync_Name"], System.Windows.ResizeMode.CanResize, System.Windows.WindowStyle.ToolWindow);
             try {
-                if (ADP_Tools.AboveHorizon(telescopeMediator.GetCurrentPosition(),
+                if (ADP_Tools.AboveMinAlt(telescopeMediator.GetCurrentPosition(),
                         profileService.ActiveProfile.AstrometrySettings.Horizon,
-                        profileService.ActiveProfile.AstrometrySettings.Latitude)) {
+                        profileService.ActiveProfile.AstrometrySettings.Latitude,
+                        pluginSettings.GetValueDouble(nameof(AddToAlignmentModel.MinElevationAboveHorizon), 5.0)))
+                    {
                     PlateSolveResult result = await DoSolve(progress, token);
                     if (!result.Success) {
                         throw new SequenceEntityFailedException(Loc.Instance["LblPlatesolveFailed"]);
@@ -135,25 +147,9 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
             );
             return await solver.Solve(seq, parameter, PlateSolveStatusVM.Progress, progress, token);
         }
-
         public virtual bool Validate() {
-            var i = new List<string>();
-            var scopeInfo = telescopeMediator.GetInfo();
-            if (!scopeInfo.Connected) {
-                i.Add(Loc.Instance["LblTelescopeNotConnected"]);
-            }
-            if (!Regex.IsMatch(scopeInfo.Name ?? "", "CPWI", RegexOptions.IgnoreCase)) {
-                i.Add("Only works with CPWI scopes");
-            }
-            if (scopeInfo.AlignmentMode != AlignmentMode.AltAz) {
-                i.Add("Only works with AltAz mounts");
-            }
-            if (!cameraMediator.GetInfo().Connected) {
-                i.Add("Camera not connected");
-            }
-
-            Issues = i;
-            return i.Count == 0;
+            Issues = ADP_Tools.ValidateConnections(telescopeMediator.GetInfo(), cameraMediator.GetInfo(), pluginSettings);
+            return Issues.Count == 0;
         }
 
 

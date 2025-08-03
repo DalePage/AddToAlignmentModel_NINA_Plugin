@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using CsvHelper.Configuration.Attributes;
+using Newtonsoft.Json;
 using NINA.Astrometry;
 using NINA.Core.Enum;
 using NINA.Core.Locale;
@@ -11,6 +12,9 @@ using NINA.Equipment.Interfaces.Mediator;
 using NINA.Equipment.Model;
 using NINA.PlateSolving;
 using NINA.PlateSolving.Interfaces;
+using NINA.Plugin;
+using NINA.Plugin.Interfaces;
+using NINA.Profile;
 using NINA.Profile.Interfaces;
 using NINA.Sequencer.SequenceItem;
 using NINA.Sequencer.Validations;
@@ -18,20 +22,24 @@ using NINA.WPF.Base.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using ADPUK.NINA.AddToAlignmentModel.Locales;
+using System.Resources;
 
 namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
     [ExportMetadata("Name", "Create Alignement Model")]
-    [ExportMetadata("Description", "The instruction carries plate solves at a number of AltAz points and adds them to the pointing model.")]
+    [ExportMetadata("Description", "The instruction carries out plate solves at a number of AltAz points and adds them to the pointing model.")]
     [ExportMetadata("Icon", "CrosshairSVG")]
     [ExportMetadata("Category", "Add To CPWI Alignment Model")]
     [Export(typeof(ISequenceItem))]
     [JsonObject(MemberSerialization.OptIn)]
     public class CreateAlignmentModel : SequenceItem, IValidatable {
+        private IPluginManifest pluginManifest;
         private ICameraMediator cameraMediator;
         private IProfileService profileService;
         private ITelescopeMediator telescopeMediator;
@@ -40,6 +48,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         private IFilterWheelMediator filterWheelMediator;
         private IPlateSolverFactory plateSolverFactory;
         private IWindowServiceFactory windowServiceFactory;
+        private PluginOptionsAccessor pluginSettings;
         private int _numberOfAzimuthPoints;
         private int _numberOfAltitudePoints;
         private double _maxElevation;
@@ -47,6 +56,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         private int _stepCount;
         private bool _isReadOnly;
         private int _solveAttempts;
+        private ResourceManager _resourceManager;
 
         public bool IsReadOnly {
             get { return _isReadOnly; }
@@ -125,7 +135,9 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                             IFilterWheelMediator filterWheelMediator,
                             IPlateSolverFactory plateSolverFactory,
                             IWindowServiceFactory windowServiceFactory,
-                            ICameraMediator cameraMediator) {
+                            ICameraMediator cameraMediator,
+                            IPluginManifest pluginManifest) {
+            this.pluginManifest = pluginManifest;
             this.profileService = profileService;
             this.telescopeMediator = telescopeMediator;
             this.rotatorMediator = rotatorMediator;
@@ -134,6 +146,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
             this.plateSolverFactory = plateSolverFactory;
             this.windowServiceFactory = windowServiceFactory;
             this.cameraMediator = cameraMediator;
+            this.pluginSettings = new PluginOptionsAccessor(profileService, Guid.Parse(Assembly.GetExecutingAssembly().GetCustomAttribute<System.Runtime.InteropServices.GuidAttribute>().Value));
             MaxElevation = 80.0;
             MinElevation = 30.0;
             NumberOfAltitudePoints = 2;
@@ -147,7 +160,8 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                                                           cloneMe.filterWheelMediator,
                                                           cloneMe.plateSolverFactory,
                                                           cloneMe.windowServiceFactory,
-                                                          cloneMe.cameraMediator) {
+                                                          cloneMe.cameraMediator,
+                                                          cloneMe.pluginManifest) {
             CopyMetaData(cloneMe);
             MaxElevation = cloneMe.MaxElevation;
             MinElevation = cloneMe.MinElevation;
@@ -225,9 +239,11 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                             Angle.ByDegree(telescopeInfo.SiteLongitude),
                             telescopeInfo.SiteElevation
                             );
-                        if (ADP_Tools.AboveHorizon(
+                        if (ADP_Tools.AboveMinAlt(
                                 altAzTarget,
-                                profileService.ActiveProfile.AstrometrySettings.Horizon)) {
+                                profileService.ActiveProfile.AstrometrySettings.Horizon,
+                                pluginSettings.GetValueDouble(nameof(AddToAlignmentModel.MinElevationAboveHorizon), 5.0)))
+                            {
 
                             Task[] taskList = [telescopeMediator.SlewToCoordinatesAsync(altAzTarget.Transform(Epoch.JNOW), token), service.Close()];
                             Task.WaitAll(taskList, token);
@@ -286,23 +302,8 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         }
 
         public virtual bool Validate() {
-            var i = new List<string>();
-            var scopeInfo = telescopeMediator.GetInfo();
-            if (!scopeInfo.Connected) {
-                i.Add(Loc.Instance["LblTelescopeNotConnected"]);
-            }
-            if (!Regex.IsMatch(scopeInfo.Name ?? "", "CPWI", RegexOptions.IgnoreCase)) {
-                i.Add("Only works with CPWI scopes");
-            }
-            if (scopeInfo.AlignmentMode != AlignmentMode.AltAz) {
-                i.Add("Only works with AltAz mounts");
-            }
-            if (!cameraMediator.GetInfo().Connected) {
-                i.Add("Camera not connected");
-            }
-
-            Issues = i;
-            return i.Count == 0;
+            Issues = ADP_Tools.ValidateConnections(telescopeMediator.GetInfo(), cameraMediator.GetInfo(), pluginSettings);
+            return Issues.Count == 0;
         }
 
 

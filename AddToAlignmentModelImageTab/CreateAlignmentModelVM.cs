@@ -27,7 +27,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-
+using ADPUK.NINA.AddToAlignmentModel.Locales;
 namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
     [Export(typeof(IDockableVM))]
     [JsonObject(MemberSerialization.OptIn)]
@@ -147,6 +147,18 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
                 }
             }
         }
+
+        private double MinElevationAboveHorizon {
+            get {
+                return pluginSettings.GetValueDouble(nameof(MinElevationAboveHorizon), 0.0);
+            }
+        }
+
+        private bool EnableEquatorialMounts {
+            get {
+                return pluginSettings.GetValueBoolean(nameof(EnableEquatorialMounts), false);
+            }
+        }
         public PlateSolvingStatusVM PlateSolveStatusVM { get; } = new PlateSolvingStatusVM();
 
         [ImportingConstructor]
@@ -247,18 +259,17 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
                 double azStep = (360.0 / NumberOfAzimuthPoints);
                 double initialAzimuth = 0.0;
                 double targetAz = initialAzimuth;
-                string hemisphere = "north";
+                string checkStartPoint = ViewStrings.EnsureNorth;
                 TelescopeInfo telescopeInfo = telescopeMediator.GetInfo();
                 TopocentricCoordinates altAzTarget = null;
                 if (telescopeMediator.GetInfo().SiteLatitude < 0.0) {
-                    hemisphere = "south";
+                    checkStartPoint = ViewStrings.EnsureSouth;
                     initialAzimuth = 180.0;
                 }
-                string checkStartPoint = $"Please ensure the scope is roughly pointing at the horizon due {hemisphere}";
-                string checkStartPointHeader = "Pre-Alignment";
+                string checkStartPointHeader = ViewStrings.PreAlignment;
                 if (Math.Abs(telescopeMediator.GetInfo().Azimuth - initialAzimuth) > 10.0 || Math.Abs(telescopeMediator.GetInfo().Altitude) > 10.0) {
-                    checkStartPoint = $"Scope thinks it is pointing to Az: {telescopeMediator.GetInfo().Azimuth}, Alt: {telescopeMediator.GetInfo().Altitude}. \nPlease confirm this is approximately correct!";
-                    checkStartPointHeader = "Scope not close to 0,0";
+                    checkStartPoint = $"Scope thinks it is pointing to Az / Alt: {telescopeMediator.GetInfo().Azimuth}, Alt: {telescopeMediator.GetInfo().Altitude}. \nPlease confirm this is approximately correct!";
+                    checkStartPointHeader = ViewStrings.ScopeNotCloseToStartingPoint;
                 }
                 MessageBoxResult boxResult = MessageBox.Show(
                     checkStartPoint,
@@ -281,9 +292,10 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
                             Angle.ByDegree(telescopeInfo.SiteLongitude),
                             telescopeInfo.SiteElevation
                             );
-                        if (ADP_Tools.AboveHorizon(
+                        if (ADP_Tools.AboveMinAlt(
                                 altAzTarget,
-                                profileService.ActiveProfile.AstrometrySettings.Horizon)) {
+                                profileService.ActiveProfile.AstrometrySettings.Horizon,
+                                MinElevationAboveHorizon)) {
 
                             await telescopeMediator.SlewToCoordinatesAsync(altAzTarget.Transform(Epoch.JNOW), token);
                             service.Show(PlateSolveStatusVM, Loc.Instance["Lbl_SequenceItem_Platesolving_SolveAndSync_Name"], System.Windows.ResizeMode.CanResize, System.Windows.WindowStyle.ToolWindow);
@@ -347,22 +359,8 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
         }
 
         public virtual bool Validate() {
-            var i = new List<string>();
-            var scopeInfo = telescopeMediator.GetInfo();
-            if (!scopeInfo.Connected) {
-                i.Add(Loc.Instance["LblTelescopeNotConnected"]);
-            }
-            if (!Regex.IsMatch(scopeInfo.Name ?? "", "CPWI")) {
-                i.Add("Only works with CPWI scopes");
-            }
-            if (scopeInfo.AlignmentMode != AlignmentMode.AltAz) {
-                i.Add("Only works with AltAz mounts");
-            }
-            if (!cameraMediator.GetInfo().Connected) {
-                i.Add("Camera not connected");
-            }
-            Issues = i;
-            return i.Count == 0;
+            Issues = ADP_Tools.ValidateConnections(telescopeMediator.GetInfo(), cameraMediator.GetInfo(), pluginSettings);
+            return Issues.Count == 0;
         }
 
         public override string ToString() {

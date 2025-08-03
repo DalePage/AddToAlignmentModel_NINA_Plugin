@@ -25,7 +25,7 @@ env:
   # The name of the resulting dll file
   PLUGIN_DLL_NAME: "ADPUK.NINA.AddToAlignmentModel"
   # The relative path to your manifest folder inside the manifest repository
-  PLUGIN_MANIFEST_PATH: "a/AddToCPWIAlignmentModel"
+  PLUGIN_MANIFEST_PATH: "a/AddToCPWIAlignmentModel/3.2.0"
   GH_TOKEN: ${{ secrets.PAT }}
 
 jobs:
@@ -121,7 +121,7 @@ jobs:
 
       - name: Copy manifest file
         run: |
-          cp "./${{ env.PLUGIN_DLL_NAME }}.${{ github.ref_name }}.manifest.json" "./nina.plugin.manifests/manifests/${{ env.PLUGIN_MANIFEST_PATH }}/manifest.${{ github.ref_name }}.json"
+          cp "./${{ env.PLUGIN_DLL_NAME }}.${{ github.ref_name }}.manifest.json" "./nina.plugin.manifests/manifests/${{ env.PLUGIN_MANIFEST_PATH }}/${{ github.ref_name }}/manifest.json"
           cd nina.plugin.manifests
           git add .
           git commit -m "Add manifest for release ${{ github.ref_name }}"
