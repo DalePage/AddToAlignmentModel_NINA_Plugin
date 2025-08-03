@@ -197,33 +197,10 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                     altStep = (MaxElevation + MinElevation) / 2.0;
                 }
                 double azStep = (360.0 / NumberOfAzimuthPoints);
-                double initialAzimuth = 0.0;
-                double targetAz = initialAzimuth;
-                string hemisphere = "north";
                 TelescopeInfo telescopeInfo = telescopeMediator.GetInfo();
-                TopocentricCoordinates altAzTarget = null;
-                if (telescopeMediator.GetInfo().SiteLatitude < 0.0) {
-                    hemisphere = "south";
-                    initialAzimuth = 180.0;
-                }
-                MessageBoxResult boxResult = MessageBox.Show(
-                    $"Please ensure the scope is roughly pointing at the horizon due {hemisphere}",
-                    "Pre-Alignment",
-                    MessageBoxButton.OKCancel);
-
-                if (boxResult != MessageBoxResult.OK) {
-                    throw new SequenceEntityFailedException($"Scope pe-alignemt to {hemisphere}ern horizon not confirmed");
-                }
-                if (Math.Abs(telescopeMediator.GetInfo().Azimuth - initialAzimuth) > 10.0 || Math.Abs(telescopeMediator.GetInfo().Altitude) > 10.0) {
-                    MessageBoxResult boxResult1 = MessageBox.Show(
-                        $"Scope thinks it is pointing to Az: {telescopeMediator.GetInfo().Azimuth}, Alt: {telescopeMediator.GetInfo().Altitude}",
-                        "Scope not close to 0,0",
-                        MessageBoxButton.OKCancel);
-
-                    if (boxResult1 != MessageBoxResult.OK) {
-                        throw new SequenceEntityFailedException($"Scope does not appear to be pointing where it thinks it should be.");
-                    }
-                }
+                double initialAzimuth = ADP_Tools.ReadyToStart(telescopeInfo);
+                double targetAz = initialAzimuth;
+                TopocentricCoordinates altAzTarget;
                 int azCount = 0;
                 double nextAz = initialAzimuth;
                 while (azCount < NumberOfAzimuthPoints) {
@@ -236,8 +213,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                             Angle.ByDegree(targetAz),
                             Angle.ByDegree(nextAlt),
                             Angle.ByDegree(telescopeInfo.SiteLatitude),
-                            Angle.ByDegree(telescopeInfo.SiteLongitude),
-                            telescopeInfo.SiteElevation
+                            Angle.ByDegree(telescopeInfo.SiteLongitude)                            
                             );
                         if (ADP_Tools.AboveMinAlt(
                                 altAzTarget,

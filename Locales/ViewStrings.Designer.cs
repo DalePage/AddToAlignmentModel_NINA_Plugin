@@ -61,20 +61,20 @@ namespace ADPUK.NINA.AddToAlignmentModel.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Allow use with mounts other than Alt-Az. - EXPERIMENTAL USE WITH CARE.
+        /// </summary>
+        public static string AllowNonAltAzMounts {
+            get {
+                return ResourceManager.GetString("AllowNonAltAzMounts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Only works with AltAz mounts.
         /// </summary>
         public static string AltAzOnly {
             get {
                 return ResourceManager.GetString("AltAzOnly", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Mount must be connected via CPWI.
-        /// </summary>
-        public static string CPWI {
-            get {
-                return ResourceManager.GetString("CPWI", resourceCulture);
             }
         }
         
@@ -97,6 +97,69 @@ namespace ADPUK.NINA.AddToAlignmentModel.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Is this correct?.
+        /// </summary>
+        public static string IsThisCorrect {
+            get {
+                return ResourceManager.GetString("IsThisCorrect", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum Elevation.
+        /// </summary>
+        public static string MaximumElevation {
+            get {
+                return ResourceManager.GetString("MaximumElevation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum Elevation Above Horizon.
+        /// </summary>
+        public static string MinElevationAboveHorizon {
+            get {
+                return ResourceManager.GetString("MinElevationAboveHorizon", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum Elevation.
+        /// </summary>
+        public static string MinimumElevation {
+            get {
+                return ResourceManager.GetString("MinimumElevation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Scope pre-alignment to northern horizon not confirmed.
+        /// </summary>
+        public static string NorthNotConfirmed {
+            get {
+                return ResourceManager.GetString("NorthNotConfirmed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Number of Altitude Points.
+        /// </summary>
+        public static string NumberOfAltitudePoints {
+            get {
+                return ResourceManager.GetString("NumberOfAltitudePoints", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Number of Azimuth Points.
+        /// </summary>
+        public static string NumberOfAzimuthPoints {
+            get {
+                return ResourceManager.GetString("NumberOfAzimuthPoints", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Pre-Alignment.
         /// </summary>
         public static string PreAlignment {
@@ -106,11 +169,47 @@ namespace ADPUK.NINA.AddToAlignmentModel.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Scope is not pointing at pole and/or horizon.
+        ///   Looks up a localized string similar to Mount must be connected via CPWI.
         /// </summary>
-        public static string ScopeNotCloseToStartingPoint {
+        public static string RequireCPWI {
             get {
-                return ResourceManager.GetString("ScopeNotCloseToStartingPoint", resourceCulture);
+                return ResourceManager.GetString("RequireCPWI", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Scope is pointing to Az: {{Azimuth}}, Alt: {{Altitude}}.
+        /// </summary>
+        public static string ScopeAltAzCoordinates {
+            get {
+                return ResourceManager.GetString("ScopeAltAzCoordinates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Scope not point to pole and/or horizon.
+        /// </summary>
+        public static string ScopeNotAtZero {
+            get {
+                return ResourceManager.GetString("ScopeNotAtZero", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Solve Attempts.
+        /// </summary>
+        public static string SolveAttempts {
+            get {
+                return ResourceManager.GetString("SolveAttempts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Scope pre-alignment to southern horizon not confirmed.
+        /// </summary>
+        public static string SouthNotConfirmed {
+            get {
+                return ResourceManager.GetString("SouthNotConfirmed", resourceCulture);
             }
         }
     }

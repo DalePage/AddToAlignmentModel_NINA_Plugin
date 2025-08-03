@@ -9,35 +9,36 @@
     <!--  Furthermore the Resource Dictionary has to be exported via code behind export attributes  -->
     <DataTemplate x:Key="Add To CPWI Alt-Az Alignment Model_Options">
         <StackPanel Orientation="Vertical">
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="{x:Static locale:ViewStrings.CPWI}" Margin="10,0,10,0"/>
-                <TextBox MinWidth="30" Text="{Binding NumberOfAzimuthPoints}" HorizontalAlignment="Center" />
-            </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Number of Altitude Points:" Margin="10,0,10,0" />
-                <TextBox MinWidth="30" Text="{Binding NumberOfAltitudePoints}" HorizontalAlignment="Center" />
-            </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Minimum Altitude:" Margin="10,0,10,0"/>
-                <TextBox MinWidth="30" Text="{Binding MinElevation}" HorizontalAlignment="Center" />
-            </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Maximum Altitude:" Margin="10,0,10,0" />
-                <TextBox MinWidth="30" Text="{Binding MaxElevation}" HorizontalAlignment="Center" />
-            </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Maximum Solve Attempts:" Margin="10,0,10,0" />
-                <TextBox MinWidth="30" Text="{Binding SolveAttempts}" HorizontalAlignment="Center" />
-            </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Minimum altitude above horizon:" Margin="10,0,10,0" />
-                <TextBox MinWidth="30" Text="{Binding MinElevationAboveHorizon}" HorizontalAlignment="Center" />
-            </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Use with Equatorial Mount:" Margin="10,0,10,0" />
-                <CheckBox IsChecked="{Binding EnableEquatorialMounts}" />
-                <TextBlock Text="EXPERIMENTAL - USE WITH CARE" FontWeight="Bold" />
-            </StackPanel>
+            <Grid HorizontalAlignment="Left">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition MinWidth="75"></ColumnDefinition>
+                    <ColumnDefinition MinWidth="30"></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="{x:Static locale:ViewStrings.NumberOfAzimuthPoints}" VerticalAlignment="Center"/>
+                <TextBox MinWidth="30" Grid.Column="1" Text="{Binding NumberOfAzimuthPoints}" HorizontalAlignment="Left" TextAlignment="Center" Margin="5" VerticalAlignment="Center" />
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="{x:Static locale:ViewStrings.NumberOfAltitudePoints}" VerticalAlignment="Center" />
+                <TextBox Grid.Row="1" Grid.Column="1" MinWidth="30" Text="{Binding NumberOfAltitudePoints}" HorizontalAlignment="Left" TextAlignment="Center" Margin="5" VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="{x:Static locale:ViewStrings.MinimumElevation}" VerticalAlignment="Center"/>
+                <TextBox Grid.Row="2" Grid.Column="1" MinWidth="30" Text="{Binding MinElevation}" HorizontalAlignment="Left" TextAlignment="Center" Margin="5" VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="{x:Static locale:ViewStrings.MaximumElevation}" VerticalAlignment="Center" />
+                <TextBox Grid.Row="3" Grid.Column="1" MinWidth="30" Text="{Binding MaxElevation}" HorizontalAlignment="Left" TextAlignment="Center" Margin="5" VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="{x:Static locale:ViewStrings.SolveAttempts}" VerticalAlignment="Center" />
+                <TextBox Grid.Row="4" Grid.Column="1" MinWidth="30" Text="{Binding SolveAttempts}" HorizontalAlignment="Left" TextAlignment="Center" Margin="5" VerticalAlignment="Center" />
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="{x:Static locale:ViewStrings.MinElevationAboveHorizon}" VerticalAlignment="Center" />
+                <TextBox Grid.Row="5" Grid.Column="1" MinWidth="30" Text="{Binding MinElevationAboveHorizon}" HorizontalAlignment="Left" Margin="5" VerticalAlignment="Center" TextAlignment="Center" />
+                <TextBlock Grid.Row="6" Grid.Column="0" Text="{x:Static locale:ViewStrings.AllowNonAltAzMounts}" VerticalAlignment="Center" Margin="5"/>
+                <CheckBox Grid.Row="6" Grid.Column="1" IsChecked="{Binding EnableEquatorialMounts}" VerticalAlignment="Center" HorizontalAlignment="Left" />
+            </Grid>
         </StackPanel>
     </DataTemplate>
 </ResourceDictionary>

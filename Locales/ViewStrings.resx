@@ -120,7 +120,7 @@
   <data name="AltAzOnly" xml:space="preserve">
     <value>Only works with AltAz mounts</value>
   </data>
-  <data name="CPWI" xml:space="preserve">
+  <data name="RequireCPWI" xml:space="preserve">
     <value>Mount must be connected via CPWI</value>
   </data>
   <data name="EnsureNorth" xml:space="preserve">
@@ -129,10 +129,43 @@
   <data name="EnsureSouth" xml:space="preserve">
     <value>Please ensure the scope is roughly pointing at the horizon due south</value>
   </data>
+  <data name="MaximumElevation" xml:space="preserve">
+    <value>Maximum Elevation</value>
+  </data>
+  <data name="MinElevationAboveHorizon" xml:space="preserve">
+    <value>Minimum Elevation Above Horizon</value>
+  </data>
+  <data name="MinimumElevation" xml:space="preserve">
+    <value>Minimum Elevation</value>
+  </data>
+  <data name="NumberOfAltitudePoints" xml:space="preserve">
+    <value>Number of Altitude Points</value>
+  </data>
+  <data name="NumberOfAzimuthPoints" xml:space="preserve">
+    <value>Number of Azimuth Points</value>
+  </data>
   <data name="PreAlignment" xml:space="preserve">
     <value>Pre-Alignment</value>
   </data>
-  <data name="ScopeNotCloseToStartingPoint" xml:space="preserve">
-    <value>Scope is not pointing at pole and/or horizon</value>
+  <data name="SolveAttempts" xml:space="preserve">
+    <value>Solve Attempts</value>
+  </data>
+  <data name="AllowNonAltAzMounts" xml:space="preserve">
+    <value>Allow use with mounts other than Alt-Az. - EXPERIMENTAL USE WITH CARE</value>
+  </data>
+  <data name="NorthNotConfirmed" xml:space="preserve">
+    <value>Scope pre-alignment to northern horizon not confirmed</value>
+  </data>
+  <data name="SouthNotConfirmed" xml:space="preserve">
+    <value>Scope pre-alignment to southern horizon not confirmed</value>
+  </data>
+  <data name="ScopeNotAtZero" xml:space="preserve">
+    <value>Scope not point to pole and/or horizon</value>
+  </data>
+  <data name="ScopeAltAzCoordinates" xml:space="preserve">
+    <value>Scope is pointing to Az: {{Azimuth}}, Alt: {{Altitude}}</value>
+  </data>
+  <data name="IsThisCorrect" xml:space="preserve">
+    <value>Is this correct?</value>
   </data>
 </root>

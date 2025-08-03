@@ -1,16 +1,19 @@
 ﻿using Accord.Statistics.Filters;
 using ADPUK.NINA.AddToAlignmentModel.Locales;
 using NINA.Astrometry;
+using NINA.Core.Enum;
 using NINA.Core.Locale;
 using NINA.Core.Model;
 using NINA.Equipment.Equipment.MyCamera;
 using NINA.Equipment.Equipment.MyTelescope;
-using NINA.Profile.Interfaces;
-using NINA.Core.Enum;
+using NINA.Equipment.Interfaces.Mediator;
 using NINA.Profile;
+using NINA.Profile.Interfaces;
 using NINA.WPF.Base.Mediator;
+using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.Windows;
 
 namespace ADPUK.NINA.AddToAlignmentModel {
     public class ADP_Tools {
@@ -33,7 +36,7 @@ namespace ADPUK.NINA.AddToAlignmentModel {
                 i.Add($"{Loc.Instance["LblTelescopeNotConnected"]}");
             }
             if (!Regex.IsMatch(scopeInfo.Name ?? "", "CPWI", RegexOptions.IgnoreCase)) {
-                i.Add(ViewStrings.CPWI);
+                i.Add(ViewStrings.RequireCPWI);
             }
             if (scopeInfo.AlignmentMode != AlignmentMode.AltAz && !pluginSettings.GetValueBoolean(nameof(AddToAlignmentModel.EnableEquatorialMounts), false)) {
                 i.Add(ViewStrings.AltAzOnly);
@@ -42,6 +45,37 @@ namespace ADPUK.NINA.AddToAlignmentModel {
                 i.Add(Loc.Instance["LblCameraNotConnected"]);
             }
             return i;
+        }
+        public static double ReadyToStart(TelescopeInfo telescopeInfo) {
+            double initialAzimuth = 0.0;
+            string msgBoxText = ViewStrings.EnsureNorth;
+            if (telescopeInfo.SiteLatitude < 0.0) {
+                msgBoxText = ViewStrings.EnsureSouth;
+                initialAzimuth = 180.0;
+            }
+            MessageBoxResult boxResult = MessageBox.Show(
+                msgBoxText,
+                ViewStrings.PreAlignment,
+                MessageBoxButton.OKCancel);
+
+            if (boxResult != MessageBoxResult.OK) {
+                if (initialAzimuth == 0.0) {
+                    throw new SequenceEntityFailedException(ViewStrings.NorthNotConfirmed);
+                } else {
+                    throw new SequenceEntityFailedException(ViewStrings.SouthNotConfirmed);
+                }
+            }
+            if (Math.Abs(telescopeInfo.Azimuth - initialAzimuth) > 10.0 || Math.Abs(telescopeInfo.Altitude) > 10.0) {
+                MessageBoxResult boxResult1 = MessageBox.Show(
+                    $"{ViewStrings.ScopeAltAzCoordinates.Replace("{{Azimuth}}", telescopeInfo.AzimuthString).Replace("{{Altidude}}", telescopeInfo.AltitudeString)} {ViewStrings.IsThisCorrect}",
+                    ViewStrings.ScopeNotAtZero,
+                    MessageBoxButton.OKCancel);
+
+                if (boxResult1 != MessageBoxResult.OK) {
+                    throw new SequenceEntityFailedException(ViewStrings.ScopeNotAtZero);
+                }
+            }
+            return initialAzimuth;
         }
     }
 }

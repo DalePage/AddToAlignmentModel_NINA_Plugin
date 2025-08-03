@@ -289,8 +289,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
                             Angle.ByDegree(targetAz),
                             Angle.ByDegree(nextAlt),
                             Angle.ByDegree(telescopeInfo.SiteLatitude),
-                            Angle.ByDegree(telescopeInfo.SiteLongitude),
-                            telescopeInfo.SiteElevation
+                            Angle.ByDegree(telescopeInfo.SiteLongitude)
                             );
                         if (ADP_Tools.AboveMinAlt(
                                 altAzTarget,
