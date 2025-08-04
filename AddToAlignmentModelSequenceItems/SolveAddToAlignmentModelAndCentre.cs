@@ -1,7 +1,6 @@
 ﻿using ADPUK.NINA.AddToAlignmentModel.Locales;
 using Newtonsoft.Json;
 using NINA.Astrometry;
-using NINA.Core.Enum;
 using NINA.Core.Locale;
 using NINA.Core.Model;
 using NINA.Core.Model.Equipment;
@@ -21,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Reflection;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -47,7 +45,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         private int _maximumAttempts;
         private int _attemptCount;
         public PlateSolvingStatusVM PlateSolveStatusVM { get; } = new PlateSolvingStatusVM();
-        private PluginOptionsAccessor pluginSettings; 
+        private PluginOptionsAccessor pluginSettings;
 
         [JsonProperty]
         public int MaximumAttemptsToCentre {
@@ -184,7 +182,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         }
 
         public virtual bool Validate() {
-            Issues = ADP_Tools.ValidateConnections(telescopeMediator.GetInfo(), cameraMediator.GetInfo(),pluginSettings);
+            Issues = ADP_Tools.ValidateConnections(telescopeMediator.GetInfo(), cameraMediator.GetInfo(), pluginSettings);
             return Issues.Count == 0;
         }
 

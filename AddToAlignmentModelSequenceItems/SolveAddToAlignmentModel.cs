@@ -1,6 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using ADPUK.NINA.AddToAlignmentModel.Locales;
+using Newtonsoft.Json;
 using NINA.Astrometry;
-using NINA.Core.Enum;
 using NINA.Core.Locale;
 using NINA.Core.Model;
 using NINA.Core.Model.Equipment;
@@ -10,7 +10,6 @@ using NINA.Equipment.Interfaces.Mediator;
 using NINA.Equipment.Model;
 using NINA.PlateSolving;
 using NINA.PlateSolving.Interfaces;
-using NINA.Plugin.Interfaces;
 using NINA.Profile;
 using NINA.Profile.Interfaces;
 using NINA.Sequencer.SequenceItem;
@@ -20,10 +19,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Reflection;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using ADPUK.NINA.AddToAlignmentModel.Locales;
 
 namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
     [ExportMetadata("Name", "Solve and Add to Alignment Model")]
@@ -41,7 +38,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         private IPlateSolverFactory plateSolverFactory;
         private IWindowServiceFactory windowServiceFactory;
         private ICameraMediator cameraMediator;
-       
+
         private IPluginOptionsAccessor pluginSettings
             ;
         public PlateSolvingStatusVM PlateSolveStatusVM { get; } = new PlateSolvingStatusVM();
@@ -102,8 +99,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                 if (ADP_Tools.AboveMinAlt(telescopeMediator.GetCurrentPosition(),
                         profileService.ActiveProfile.AstrometrySettings.Horizon,
                         profileService.ActiveProfile.AstrometrySettings.Latitude,
-                        pluginSettings.GetValueDouble(nameof(AddToAlignmentModel.MinElevationAboveHorizon), 5.0)))
-                    {
+                        pluginSettings.GetValueDouble(nameof(AddToAlignmentModel.MinElevationAboveHorizon), 5.0))) {
                     PlateSolveResult result = await DoSolve(progress, token);
                     if (!result.Success) {
                         throw new SequenceEntityFailedException(Loc.Instance["LblPlatesolveFailed"]);

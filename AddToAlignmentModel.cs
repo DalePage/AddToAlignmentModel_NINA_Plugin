@@ -111,15 +111,15 @@ namespace ADPUK.NINA.AddToAlignmentModel {
         }
         public int SolveAttempts {
             get { return pluginSettings.GetValueInt32(nameof(SolveAttempts), 1); }
-            set { 
+            set {
                 pluginSettings.SetValueInt32(nameof(SolveAttempts), value);
                 RaisePropertyChanged();
             }
-            
+
         }
         public double MinElevationAboveHorizon {
-            get { 
-                var mh = pluginSettings.GetValueDouble(nameof(MinElevationAboveHorizon), 0.0); 
+            get {
+                var mh = pluginSettings.GetValueDouble(nameof(MinElevationAboveHorizon), 0.0);
                 if (mh == 0.0) return 0.0;
                 return mh;
             }

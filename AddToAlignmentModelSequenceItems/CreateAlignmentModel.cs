@@ -1,7 +1,6 @@
-﻿using CsvHelper.Configuration.Attributes;
+﻿using ADPUK.NINA.AddToAlignmentModel.Locales;
 using Newtonsoft.Json;
 using NINA.Astrometry;
-using NINA.Core.Enum;
 using NINA.Core.Locale;
 using NINA.Core.Model;
 using NINA.Core.Model.Equipment;
@@ -12,7 +11,6 @@ using NINA.Equipment.Interfaces.Mediator;
 using NINA.Equipment.Model;
 using NINA.PlateSolving;
 using NINA.PlateSolving.Interfaces;
-using NINA.Plugin;
 using NINA.Plugin.Interfaces;
 using NINA.Profile;
 using NINA.Profile.Interfaces;
@@ -23,14 +21,10 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Reflection;
-using System.Text;
+using System.Resources;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
-using ADPUK.NINA.AddToAlignmentModel.Locales;
-using System.Resources;
 
 namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
     [ExportMetadata("Name", "Create Alignement Model")]
@@ -57,7 +51,6 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         private int _stepCount;
         private bool _isReadOnly;
         private int _solveAttempts;
-        private ResourceManager _resourceManager;
 
         public bool IsReadOnly {
             get { return _isReadOnly; }
@@ -214,13 +207,12 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                             Angle.ByDegree(targetAz),
                             Angle.ByDegree(nextAlt),
                             Angle.ByDegree(telescopeInfo.SiteLatitude),
-                            Angle.ByDegree(telescopeInfo.SiteLongitude)                            
+                            Angle.ByDegree(telescopeInfo.SiteLongitude)
                             );
                         if (ADP_Tools.AboveMinAlt(
                                 altAzTarget,
                                 profileService.ActiveProfile.AstrometrySettings.Horizon,
-                                pluginSettings.GetValueDouble(nameof(AddToAlignmentModel.MinElevationAboveHorizon), 5.0)))
-                            {
+                                pluginSettings.GetValueDouble(nameof(AddToAlignmentModel.MinElevationAboveHorizon), 5.0))) {
 
                             Task[] taskList = [telescopeMediator.SlewToCoordinatesAsync(altAzTarget.Transform(Epoch.JNOW), token), service.Close()];
                             Task.WaitAll(taskList, token);

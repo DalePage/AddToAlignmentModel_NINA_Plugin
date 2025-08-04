@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.Composition;
-using System.Windows.Controls;
 using System.Windows;
 
 namespace ADPUK.NINA.AddToAlignmentModel {
