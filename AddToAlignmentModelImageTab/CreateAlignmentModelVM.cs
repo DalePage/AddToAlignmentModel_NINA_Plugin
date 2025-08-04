@@ -321,14 +321,14 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
         }
 
         protected virtual async Task<PlateSolveResult> DoSolve(IProgress<ApplicationStatus> progress, CancellationToken token) {
-            var plateSolver = plateSolverFactory.GetPlateSolver(profileService.ActiveProfile.PlateSolveSettings);
-            var blindSolver = plateSolverFactory.GetBlindSolver(profileService.ActiveProfile.PlateSolveSettings);
+            IPlateSolver plateSolver = plateSolverFactory.GetPlateSolver(profileService.ActiveProfile.PlateSolveSettings);
+            IPlateSolver blindSolver = plateSolverFactory.GetBlindSolver(profileService.ActiveProfile.PlateSolveSettings);
 
-            var solver = plateSolverFactory.GetCaptureSolver(plateSolver, blindSolver, imagingMediator, filterWheelMediator);
+            ICaptureSolver solver = plateSolverFactory.GetCaptureSolver(plateSolver, blindSolver, imagingMediator, filterWheelMediator);
 
-            var parameter = ADP_Tools.CreateCaptureSolverParameter(profileService.ActiveProfile, telescopeMediator.GetCurrentPosition(), SolveAttempts);
+            CaptureSolverParameter parameter = ADP_Tools.CreateCaptureSolverParameter(profileService.ActiveProfile, telescopeMediator.GetCurrentPosition(), SolveAttempts);
 
-            var seq = new CaptureSequence(
+            CaptureSequence seq = new CaptureSequence(
                 profileService.ActiveProfile.PlateSolveSettings.ExposureTime,
                 CaptureSequence.ImageTypes.SNAPSHOT,
                 profileService.ActiveProfile.PlateSolveSettings.Filter,
