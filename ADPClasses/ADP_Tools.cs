@@ -1,4 +1,5 @@
-﻿using Accord.Statistics.Filters;
+﻿using Accord;
+using Accord.Statistics.Filters;
 using ADPUK.NINA.AddToAlignmentModel.Locales;
 using NINA.Astrometry;
 using NINA.Core.Enum;
@@ -7,6 +8,7 @@ using NINA.Core.Model;
 using NINA.Equipment.Equipment.MyCamera;
 using NINA.Equipment.Equipment.MyTelescope;
 using NINA.Equipment.Interfaces.Mediator;
+using NINA.PlateSolving;
 using NINA.Profile;
 using NINA.Profile.Interfaces;
 using NINA.WPF.Base.Mediator;
@@ -76,6 +78,32 @@ namespace ADPUK.NINA.AddToAlignmentModel {
                 }
             }
             return initialAzimuth;
+        }
+    }
+    public class ModelPoint {
+        public double TargetAlt;
+        public double TargetAz;
+        public string TargetRAString;
+        public double TargetRA;
+        public double TargetDec;
+        public string ActualRAString;
+        public double ActualRA;
+        public double ActualDec;
+        public double Separation;
+
+        public ModelPoint() { }
+        public ModelPoint(TopocentricCoordinates target, PlateSolveResult plateSolveResult) {
+            Coordinates result = plateSolveResult.Coordinates.Transform(Epoch.JNOW);
+            Coordinates targetCoords = target.Transform(Epoch.JNOW);
+            TargetAlt = target.Altitude.Degree;
+            TargetAz = target.Azimuth.Degree;
+            TargetRAString = targetCoords.RAString;
+            TargetRA = targetCoords.RA;
+            TargetDec = targetCoords.Dec;
+            ActualRAString = result.RAString;
+            ActualRA = result.RA;
+            ActualDec = result.Dec;
+            Separation = plateSolveResult.Separation.Distance.Degree;
         }
     }
 }

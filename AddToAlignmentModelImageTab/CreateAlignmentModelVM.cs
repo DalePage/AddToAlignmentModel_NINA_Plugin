@@ -28,9 +28,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using ADPUK.NINA.AddToAlignmentModel.Locales;
+using ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab;
 namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
     [Export(typeof(IDockableVM))]
     [JsonObject(MemberSerialization.OptIn)]
+
+
     public class CreateAlignmentModelVM : DockableVM, IValidatable {
         private ICameraMediator cameraMediator;
         private ITelescopeMediator telescopeMediator;
@@ -55,7 +58,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
 
         }
 
-        private ObservableCollection<Coordinates> _ModelPoints;
+        private ObservableCollection<ModelPoint> _ModelPoints;
         private CancellationTokenSource executeCTS;
         private CancellationTokenSource pauseCTS;
 
@@ -65,7 +68,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
         public IAsyncRelayCommand ResumeCreate { get; }
 
         public bool CanExecute { get { return Validate(); } }
-        public ObservableCollection<Coordinates> ModelPoints {
+        public ObservableCollection<ModelPoint> ModelPoints {
             get { return _ModelPoints; }
             set { _ModelPoints = value; }
         }
@@ -148,9 +151,16 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
             }
         }
 
-        private double MinElevationAboveHorizon {
+        public double MinElevationAboveHorizon {
             get {
                 return pluginSettings.GetValueDouble(nameof(MinElevationAboveHorizon), 0.0);
+            }
+            set {
+                if (pluginSettings != null) {
+                    pluginSettings.SetValueDouble(nameof(MinElevationAboveHorizon), value);
+                    RaisePropertyChanged();
+                }
+
             }
         }
 
@@ -183,7 +193,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
             NumberOfAltitudePoints = 2;
             NumberOfAzimuthPoints = 6;
             Title = "Alignment Model for CPWI";
-            ModelPoints = new ObservableCollection<Coordinates>();
+            ModelPoints = new ObservableCollection<ModelPoint>();
             executeCTS = new CancellationTokenSource();
             StartCreate = new AsyncRelayCommand(ExecuteCreate);
             PauseCreate = new AsyncRelayCommand(PauseCreation);
@@ -257,28 +267,10 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
                     altStep = (MaxElevation + MinElevation) / 2.0;
                 }
                 double azStep = (360.0 / NumberOfAzimuthPoints);
-                double initialAzimuth = 0.0;
-                double targetAz = initialAzimuth;
-                string checkStartPoint = ViewStrings.EnsureNorth;
                 TelescopeInfo telescopeInfo = telescopeMediator.GetInfo();
-                TopocentricCoordinates altAzTarget = null;
-                if (telescopeMediator.GetInfo().SiteLatitude < 0.0) {
-                    checkStartPoint = ViewStrings.EnsureSouth;
-                    initialAzimuth = 180.0;
-                }
-                string checkStartPointHeader = ViewStrings.PreAlignment;
-                if (Math.Abs(telescopeMediator.GetInfo().Azimuth - initialAzimuth) > 10.0 || Math.Abs(telescopeMediator.GetInfo().Altitude) > 10.0) {
-                    checkStartPoint = $"Scope thinks it is pointing to Az / Alt: {telescopeMediator.GetInfo().Azimuth}, Alt: {telescopeMediator.GetInfo().Altitude}. \nPlease confirm this is approximately correct!";
-                    checkStartPointHeader = ViewStrings.ScopeNotCloseToStartingPoint;
-                }
-                MessageBoxResult boxResult = MessageBox.Show(
-                    checkStartPoint,
-                    checkStartPointHeader,
-                    MessageBoxButton.OKCancel);
-
-                if (boxResult != MessageBoxResult.OK) {
-                    return;
-                }
+                TopocentricCoordinates altAzTarget;
+                double initialAzimuth = ADP_Tools.ReadyToStart(telescopeInfo);
+                double targetAz = initialAzimuth;
                 StepCount = 0;
                 for (double nextAz = initialAzimuth; nextAz < initialAzimuth + 360.0 + (0.1 * azStep); nextAz += azStep) {
                     targetAz = nextAz < 360.0 ? nextAz : nextAz - 360.0;
@@ -302,25 +294,29 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
                                 if (IsPaused) { await pauseTask(); }
                                 PlateSolveResult result = await DoSolve(progress, token);
                                 if (!result.Success) {
-                                    Notification.ShowWarning($"Plate solve failed at Az: {targetAz}, Alt: {nextAlt}");
+                                    Notification.ShowWarning($"{ViewStrings.PlateSolveFailedAt.Replace("{{Azimuth}}", targetAz.ToString()).Replace("{{Altitude}}}", targetAz.ToString())}");
                                 } else {
                                     Coordinates resultCoordinates = result.Coordinates.Transform(Epoch.JNOW);
                                     string addAlignmentResponse = telescopeMediator.Action("Telescope:AddAlignmentReference", $"{resultCoordinates.RA}:{resultCoordinates.Dec}");
-                                    ModelPoints.Add(resultCoordinates);
+                                    ModelPoint modelPoint = new ModelPoint(altAzTarget, result);
+                                    ModelPoints.Add(modelPoint);
                                 }
                             } else {
-                                ModelPoints.Add(telescopeMediator.GetInfo().Coordinates);
-
+                                ModelPoint failedModelPoint = new ModelPoint();
+                                failedModelPoint.TargetAlt = altAzTarget.Altitude.Degree;
+                                failedModelPoint.TargetAz = altAzTarget.Azimuth.Degree;
+                                ModelPoints.Add(failedModelPoint);
+                                Notification.ShowWarning(Loc.Instance["Lbl_CameraNotConnected"]);
                             }
                         } else {
-                            Notification.ShowWarning($"Target at Az: {targetAz}, Alt: {nextAlt} is below the horizon");
+                            Notification.ShowWarning($"{ViewStrings.TargetBelowHorizon.Replace("{{Azimuth}}", targetAz.ToString()).Replace("{{Altitude}}", nextAlt.ToString())}");
                         }
                         StepCount++;
                     }
                 }
 
             } catch (OperationCanceledException) {
-                Notification.ShowWarning("Alignment model buider cancelled");
+                Notification.ShowWarning(ViewStrings.ModelBuilderCancelled);
             } finally {
                 service.DelayedClose(new TimeSpan(0, 0, 10));
                 IsReadOnly = false;

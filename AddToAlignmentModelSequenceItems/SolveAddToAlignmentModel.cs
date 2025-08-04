@@ -112,7 +112,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                         string addAlignmentResponse = telescopeMediator.Action("Telescope:AddAlignmentReference", $"{resultCoordinates.RA}:{resultCoordinates.Dec}");
                     }
                 } else {
-                    Notification.ShowWarning("Target is below the horizon");
+                    Notification.ShowWarning(ViewStrings.TargetBelowHorizon);
                 }
             } finally {
                 service.DelayedClose(TimeSpan.FromSeconds(10));

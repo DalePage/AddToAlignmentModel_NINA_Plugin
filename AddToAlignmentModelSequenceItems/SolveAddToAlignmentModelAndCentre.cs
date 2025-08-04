@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using ADPUK.NINA.AddToAlignmentModel.Locales;
+using Newtonsoft.Json;
 using NINA.Astrometry;
 using NINA.Core.Enum;
 using NINA.Core.Locale;
@@ -146,7 +147,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                             }
                         }
                     } else {
-                        Notification.ShowWarning("Target is below the horizon");
+                        Notification.ShowWarning(ViewStrings.TargetBelowHorizon);
                     }
                 } while (!centred && AttemptCount <= MaximumAttemptsToCentre && isAboveHorizon);
             } finally {

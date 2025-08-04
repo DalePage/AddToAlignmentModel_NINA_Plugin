@@ -61,6 +61,51 @@ namespace ADPUK.NINA.AddToAlignmentModel.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Actual Alt.
+        /// </summary>
+        public static string ActualAlt {
+            get {
+                return ResourceManager.GetString("ActualAlt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Actual Az.
+        /// </summary>
+        public static string ActualAz {
+            get {
+                return ResourceManager.GetString("ActualAz", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Actual Dec.
+        /// </summary>
+        public static string ActualDec {
+            get {
+                return ResourceManager.GetString("ActualDec", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Actual RA.
+        /// </summary>
+        public static string ActualRA {
+            get {
+                return ResourceManager.GetString("ActualRA", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Alignment Model.
+        /// </summary>
+        public static string AlignmentModel {
+            get {
+                return ResourceManager.GetString("AlignmentModel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Allow use with mounts other than Alt-Az. - EXPERIMENTAL USE WITH CARE.
         /// </summary>
         public static string AllowNonAltAzMounts {
@@ -75,6 +120,15 @@ namespace ADPUK.NINA.AddToAlignmentModel.Locales {
         public static string AltAzOnly {
             get {
                 return ResourceManager.GetString("AltAzOnly", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Completed.
+        /// </summary>
+        public static string Completed {
+            get {
+                return ResourceManager.GetString("Completed", resourceCulture);
             }
         }
         
@@ -106,6 +160,15 @@ namespace ADPUK.NINA.AddToAlignmentModel.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Maximum number of attempts to centre.
+        /// </summary>
+        public static string MaxCentreAttempts {
+            get {
+                return ResourceManager.GetString("MaxCentreAttempts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Maximum Elevation.
         /// </summary>
         public static string MaximumElevation {
@@ -133,6 +196,15 @@ namespace ADPUK.NINA.AddToAlignmentModel.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Alignment model builder cancelled.
+        /// </summary>
+        public static string ModelBuilderCancelled {
+            get {
+                return ResourceManager.GetString("ModelBuilderCancelled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Scope pre-alignment to northern horizon not confirmed.
         /// </summary>
         public static string NorthNotConfirmed {
@@ -156,6 +228,15 @@ namespace ADPUK.NINA.AddToAlignmentModel.Locales {
         public static string NumberOfAzimuthPoints {
             get {
                 return ResourceManager.GetString("NumberOfAzimuthPoints", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Plate solve failed at Az: {{Azimuth}}, Alt: {{Altitude}}.
+        /// </summary>
+        public static string PlateSolveFailedAt {
+            get {
+                return ResourceManager.GetString("PlateSolveFailedAt", resourceCulture);
             }
         }
         
@@ -196,6 +277,15 @@ namespace ADPUK.NINA.AddToAlignmentModel.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Separation.
+        /// </summary>
+        public static string Separation {
+            get {
+                return ResourceManager.GetString("Separation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Solve Attempts.
         /// </summary>
         public static string SolveAttempts {
@@ -210,6 +300,51 @@ namespace ADPUK.NINA.AddToAlignmentModel.Locales {
         public static string SouthNotConfirmed {
             get {
                 return ResourceManager.GetString("SouthNotConfirmed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Target Alt.
+        /// </summary>
+        public static string TargetAlt {
+            get {
+                return ResourceManager.GetString("TargetAlt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Target Az.
+        /// </summary>
+        public static string TargetAz {
+            get {
+                return ResourceManager.GetString("TargetAz", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Target at Az: {{Azimuth}}, Alt: {{Altitude}} is below the horizon.
+        /// </summary>
+        public static string TargetBelowHorizon {
+            get {
+                return ResourceManager.GetString("TargetBelowHorizon", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Target Dec.
+        /// </summary>
+        public static string TargetDec {
+            get {
+                return ResourceManager.GetString("TargetDec", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Target RA.
+        /// </summary>
+        public static string TargetRA {
+            get {
+                return ResourceManager.GetString("TargetRA", resourceCulture);
             }
         }
     }

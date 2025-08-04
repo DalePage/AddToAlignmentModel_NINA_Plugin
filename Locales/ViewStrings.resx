@@ -168,4 +168,49 @@
   <data name="IsThisCorrect" xml:space="preserve">
     <value>Is this correct?</value>
   </data>
+  <data name="PlateSolveFailedAt" xml:space="preserve">
+    <value>Plate solve failed at Az: {{Azimuth}}, Alt: {{Altitude}}</value>
+  </data>
+  <data name="TargetBelowHorizon" xml:space="preserve">
+    <value>Target at Az: {{Azimuth}}, Alt: {{Altitude}} is below the horizon</value>
+  </data>
+  <data name="ModelBuilderCancelled" xml:space="preserve">
+    <value>Alignment model builder cancelled</value>
+  </data>
+  <data name="TargetRA" xml:space="preserve">
+    <value>Target RA</value>
+  </data>
+  <data name="TargetAz" xml:space="preserve">
+    <value>Target Az</value>
+  </data>
+  <data name="TargetAlt" xml:space="preserve">
+    <value>Target Alt</value>
+  </data>
+  <data name="TargetDec" xml:space="preserve">
+    <value>Target Dec</value>
+  </data>
+  <data name="ActualAz" xml:space="preserve">
+    <value>Actual Az</value>
+  </data>
+  <data name="ActualAlt" xml:space="preserve">
+    <value>Actual Alt</value>
+  </data>
+  <data name="ActualDec" xml:space="preserve">
+    <value>Actual Dec</value>
+  </data>
+  <data name="ActualRA" xml:space="preserve">
+    <value>Actual RA</value>
+  </data>
+  <data name="Separation" xml:space="preserve">
+    <value>Separation</value>
+  </data>
+  <data name="Completed" xml:space="preserve">
+    <value>Completed</value>
+  </data>
+  <data name="MaxCentreAttempts" xml:space="preserve">
+    <value>Maximum number of attempts to centre</value>
+  </data>
+  <data name="AlignmentModel" xml:space="preserve">
+    <value>Alignment Model</value>
+  </data>
 </root>
