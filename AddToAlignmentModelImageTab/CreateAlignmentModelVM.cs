@@ -325,19 +325,8 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
             var blindSolver = plateSolverFactory.GetBlindSolver(profileService.ActiveProfile.PlateSolveSettings);
 
             var solver = plateSolverFactory.GetCaptureSolver(plateSolver, blindSolver, imagingMediator, filterWheelMediator);
-            var parameter = new CaptureSolverParameter() {
-                Attempts = SolveAttempts,
-                Binning = profileService.ActiveProfile.PlateSolveSettings.Binning,
-                Coordinates = telescopeMediator.GetCurrentPosition(),
-                DownSampleFactor = profileService.ActiveProfile.PlateSolveSettings.DownSampleFactor,
-                FocalLength = profileService.ActiveProfile.TelescopeSettings.FocalLength,
-                MaxObjects = profileService.ActiveProfile.PlateSolveSettings.MaxObjects,
-                PixelSize = profileService.ActiveProfile.CameraSettings.PixelSize,
-                ReattemptDelay = TimeSpan.FromMinutes(profileService.ActiveProfile.PlateSolveSettings.ReattemptDelay),
-                Regions = profileService.ActiveProfile.PlateSolveSettings.Regions,
-                SearchRadius = profileService.ActiveProfile.PlateSolveSettings.SearchRadius,
-                BlindFailoverEnabled = profileService.ActiveProfile.PlateSolveSettings.BlindFailoverEnabled
-            };
+
+            var parameter = ADP_Tools.CreateCaptureSolverParameter(profileService.ActiveProfile, telescopeMediator.GetCurrentPosition(), SolveAttempts);
 
             var seq = new CaptureSequence(
                 profileService.ActiveProfile.PlateSolveSettings.ExposureTime,

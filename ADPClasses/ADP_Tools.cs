@@ -6,7 +6,9 @@ using NINA.Core.Model;
 using NINA.Equipment.Equipment.MyCamera;
 using NINA.Equipment.Equipment.MyTelescope;
 using NINA.PlateSolving;
+using NINA.Profile;
 using NINA.Profile.Interfaces;
+using NINA.WPF.Base.Mediator;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -73,6 +75,21 @@ namespace ADPUK.NINA.AddToAlignmentModel {
                 }
             }
             return initialAzimuth;
+        }
+        public static CaptureSolverParameter CreateCaptureSolverParameter(IProfile activeProfile, Coordinates currentPosition, int? solveAttempts = null) {
+            return new CaptureSolverParameter() {
+                Attempts = solveAttempts ?? activeProfile.PlateSolveSettings.NumberOfAttempts,
+                Binning = activeProfile.PlateSolveSettings.Binning,
+                Coordinates = currentPosition,
+                DownSampleFactor = activeProfile.PlateSolveSettings.DownSampleFactor,
+                FocalLength = activeProfile.TelescopeSettings.FocalLength,
+                MaxObjects = activeProfile.PlateSolveSettings.MaxObjects,
+                PixelSize = activeProfile.CameraSettings.PixelSize,
+                ReattemptDelay = TimeSpan.FromMinutes(activeProfile.PlateSolveSettings.ReattemptDelay),
+                Regions = activeProfile.PlateSolveSettings.Regions,
+                SearchRadius = activeProfile.PlateSolveSettings.SearchRadius,
+                BlindFailoverEnabled = activeProfile.PlateSolveSettings.BlindFailoverEnabled
+            };
         }
     }
     public class ModelPoint {

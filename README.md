@@ -16,7 +16,7 @@ is pointing but does not update the alignment model.
 The user can select the number of points in both Azimuth and Altitude. Once triggered the mount is moved to the selected
 cordinates and an image obtained and plate solved to obtain the actual RA/Dec which are then fed back to CPWI as an alignment location.
 
-I also included sequencer actions to plate solve an image and update the alignment model. Potentially these could be called from a trigger but I have not yet had time to create a dedicated trigger.
+I also include sequencer actions to plate solve an image and update the alignment model. Potentially these could be called from a trigger but I have not yet had time to create a dedicated trigger.
 
 The plugin has been developed and tested using CPWI with a Celestron Astro-Fi 6 mount and scope. It is beleived it will 
 work with other CPWI controlled Alt Azimuth mounts but it cannot be guranteed.
