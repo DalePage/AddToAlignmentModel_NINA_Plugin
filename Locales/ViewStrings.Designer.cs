@@ -232,6 +232,24 @@ namespace ADPUK.NINA.AddToAlignmentModel.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Delay before closing plate solve window (sec).
+        /// </summary>
+        public static string PlateSolveDelay {
+            get {
+                return ResourceManager.GetString("PlateSolveDelay", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Plate Solve Failed.
+        /// </summary>
+        public static string PlateSolveFailed {
+            get {
+                return ResourceManager.GetString("PlateSolveFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Plate solve failed at Az: {{Azimuth}}, Alt: {{Altitude}}.
         /// </summary>
         public static string PlateSolveFailedAt {

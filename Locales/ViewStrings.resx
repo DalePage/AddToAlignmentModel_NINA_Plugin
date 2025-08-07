@@ -213,4 +213,10 @@
   <data name="AlignmentModel" xml:space="preserve">
     <value>Alignment Model</value>
   </data>
+  <data name="PlateSolveFailed" xml:space="preserve">
+    <value>Plate Solve Failed</value>
+  </data>
+  <data name="PlateSolveDelay" xml:space="preserve">
+    <value>Delay before closing plate solve window (sec)</value>
+  </data>
 </root>

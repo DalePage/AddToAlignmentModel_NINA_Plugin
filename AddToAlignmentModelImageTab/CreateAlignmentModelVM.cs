@@ -1,10 +1,12 @@
 ﻿using ADPUK.NINA.AddToAlignmentModel.Locales;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json;
 using NINA.Astrometry;
 using NINA.Core.Locale;
 using NINA.Core.Model;
 using NINA.Core.Model.Equipment;
+using NINA.Core.Utility;
 using NINA.Core.Utility.Notification;
 using NINA.Core.Utility.WindowService;
 using NINA.Equipment.Equipment.MyTelescope;
@@ -15,22 +17,26 @@ using NINA.PlateSolving;
 using NINA.PlateSolving.Interfaces;
 using NINA.Profile;
 using NINA.Profile.Interfaces;
+using NINA.Sequencer.Container;
 using NINA.Sequencer.Validations;
 using NINA.WPF.Base.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
+using System.Diagnostics.Tracing;
+using System.Drawing.Imaging;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Navigation;
 namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
     [Export(typeof(IDockableVM))]
     [JsonObject(MemberSerialization.OptIn)]
 
 
-    public class CreateAlignmentModelVM : DockableVM, IValidatable {
+    public partial class CreateAlignmentModelVM : DockableVM, IValidatable {
         private ICameraMediator cameraMediator;
         private ITelescopeMediator telescopeMediator;
         private IRotatorMediator rotatorMediator;
@@ -54,7 +60,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
 
         }
 
-        private ObservableCollection<ModelPoint> _ModelPoints;
+        private ListModelModelPoints _ModelPoints;
         private CancellationTokenSource executeCTS;
         private CancellationTokenSource pauseCTS;
 
@@ -64,10 +70,12 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
         public IAsyncRelayCommand ResumeCreate { get; }
 
         public bool CanExecute { get { return Validate(); } }
-        public ObservableCollection<ModelPoint> ModelPoints {
+
+        public ListModelModelPoints ModelPoints {
             get { return _ModelPoints; }
             set { _ModelPoints = value; }
         }
+
         public bool IsReadOnly {
             get { return _isReadOnly; }
             set {
@@ -147,6 +155,18 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
             }
         }
 
+        [JsonProperty]
+        public int PlateSolveCloseDelay {
+            get => pluginSettings.GetValueInt32(nameof(PlateSolveCloseDelay), 5);
+            set {
+                if (pluginSettings != null) {
+                    pluginSettings.SetValueInt32(nameof(PlateSolveCloseDelay), value);
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [JsonProperty]
         public double MinElevationAboveHorizon {
             get {
                 return pluginSettings.GetValueDouble(nameof(MinElevationAboveHorizon), 0.0);
@@ -167,6 +187,13 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
         }
         public PlateSolvingStatusVM PlateSolveStatusVM { get; } = new PlateSolvingStatusVM();
 
+        public struct CreateParams {
+            public double MinElevationAboveHorizon;
+            public int PlateSolveDelay;
+            public int SolveAttempts;
+
+        }
+
         [ImportingConstructor]
         public CreateAlignmentModelVM(
                             IProfileService profileServiceforBase,
@@ -184,12 +211,12 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
             this.plateSolverFactory = plateSolverFactory;
             this.windowServiceFactory = windowServiceFactory;
             this.cameraMediator = cameraMediator;
+            ModelPoints = new ListModelModelPoints();
             MaxElevation = 80.0;
             MinElevation = 30.0;
             NumberOfAltitudePoints = 2;
             NumberOfAzimuthPoints = 6;
             Title = "Alignment Model for CPWI";
-            ModelPoints = new ObservableCollection<ModelPoint>();
             executeCTS = new CancellationTokenSource();
             StartCreate = new AsyncRelayCommand(ExecuteCreate);
             PauseCreate = new AsyncRelayCommand(PauseCreation);
@@ -268,11 +295,13 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
                 double initialAzimuth = ADP_Tools.ReadyToStart(telescopeInfo);
                 double targetAz = initialAzimuth;
                 StepCount = 0;
-                for (double nextAz = initialAzimuth; nextAz < initialAzimuth + 360.0 + (0.1 * azStep); nextAz += azStep) {
+                double nextAz = initialAzimuth;
+                for (int azc = 1; azc <= NumberOfAzimuthPoints; azc++) {
                     targetAz = nextAz < 360.0 ? nextAz : nextAz - 360.0;
                     for (double nextAlt = MinElevation; nextAlt <= MaxElevation; nextAlt += altStep) {
                         if (IsPaused) { await pauseTask(); }
-                        service.DelayedClose(new TimeSpan(0, 0, 10));
+                        ModelPoint modelPoint;
+                        service.DelayedClose(new TimeSpan(0, 0, PlateSolveCloseDelay));
                         altAzTarget = new TopocentricCoordinates(
                             Angle.ByDegree(targetAz),
                             Angle.ByDegree(nextAlt),
@@ -290,18 +319,20 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
                                 if (IsPaused) { await pauseTask(); }
                                 PlateSolveResult result = await DoSolve(progress, token);
                                 if (!result.Success) {
+                                    modelPoint = new ModelPoint(altAzTarget);
+                                    modelPoint.ActualRAString = ViewStrings.PlateSolveFailed;
+                                    ModelPoints.Add(modelPoint);
                                     Notification.ShowWarning($"{ViewStrings.PlateSolveFailedAt.Replace("{{Azimuth}}", targetAz.ToString()).Replace("{{Altitude}}}", targetAz.ToString())}");
                                 } else {
                                     Coordinates resultCoordinates = result.Coordinates.Transform(Epoch.JNOW);
                                     string addAlignmentResponse = telescopeMediator.Action("Telescope:AddAlignmentReference", $"{resultCoordinates.RA}:{resultCoordinates.Dec}");
-                                    ModelPoint modelPoint = new ModelPoint(altAzTarget, result);
+                                    modelPoint = new ModelPoint(altAzTarget, result);
                                     ModelPoints.Add(modelPoint);
                                 }
                             } else {
-                                ModelPoint failedModelPoint = new ModelPoint();
-                                failedModelPoint.TargetAlt = altAzTarget.Altitude.Degree;
-                                failedModelPoint.TargetAz = altAzTarget.Azimuth.Degree;
-                                ModelPoints.Add(failedModelPoint);
+                                modelPoint= new ModelPoint(altAzTarget);
+                                modelPoint.ActualRAString = Loc.Instance["Lbl_CameraNotConnected"];
+                                ModelPoints.Add(modelPoint);
                                 Notification.ShowWarning(Loc.Instance["Lbl_CameraNotConnected"]);
                             }
                         } else {
@@ -309,12 +340,13 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
                         }
                         StepCount++;
                     }
+                    nextAz += azStep;
                 }
 
             } catch (OperationCanceledException) {
                 Notification.ShowWarning(ViewStrings.ModelBuilderCancelled);
             } finally {
-                service.DelayedClose(new TimeSpan(0, 0, 10));
+                service.DelayedClose(new TimeSpan(0, 0, PlateSolveCloseDelay));
                 IsReadOnly = false;
             }
 
@@ -346,6 +378,6 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
         public override string ToString() {
             return $"Category: Docakables, Item: {nameof(CreateAlignmentModelVM)}";
         }
-    }
 
+    }
 }

@@ -1,8 +1,10 @@
 ﻿using ADPUK.NINA.AddToAlignmentModel.Locales;
+using CommunityToolkit.Mvvm.ComponentModel;
 using NINA.Astrometry;
 using NINA.Core.Enum;
 using NINA.Core.Locale;
 using NINA.Core.Model;
+using NINA.Core.Utility;
 using NINA.Equipment.Equipment.MyCamera;
 using NINA.Equipment.Equipment.MyTelescope;
 using NINA.PlateSolving;
@@ -13,9 +15,10 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Windows;
+using System.Xml.Serialization;
 
 namespace ADPUK.NINA.AddToAlignmentModel {
-    public class ADP_Tools {
+    public partial class ADP_Tools {
         public static bool AboveMinAlt(Coordinates currentPosition, CustomHorizon horizon, double latitude, double minAboveHorizon) {
             double currentAlt = AstroUtil.GetAltitude(currentPosition.RADegrees, latitude, currentPosition.Dec);
             double currentAz = AstroUtil.GetAzimuth(currentPosition.RADegrees, currentAlt, latitude, currentPosition.Dec);
@@ -66,9 +69,10 @@ namespace ADPUK.NINA.AddToAlignmentModel {
             }
             if (Math.Abs(telescopeInfo.Azimuth - initialAzimuth) > 10.0 || Math.Abs(telescopeInfo.Altitude) > 10.0) {
                 MessageBoxResult boxResult1 = MessageBox.Show(
-                    $"{ViewStrings.ScopeAltAzCoordinates.Replace("{{Azimuth}}", telescopeInfo.AzimuthString).Replace("{{Altidude}}", telescopeInfo.AltitudeString)} {ViewStrings.IsThisCorrect}",
+                    $"{ViewStrings.ScopeAltAzCoordinates.Replace("{{Azimuth}}", telescopeInfo.AzimuthString).Replace("{{Altitude}}", telescopeInfo.AltitudeString)} {ViewStrings.IsThisCorrect}",
                     ViewStrings.ScopeNotAtZero,
                     MessageBoxButton.OKCancel);
+                initialAzimuth = telescopeInfo.Azimuth;
 
                 if (boxResult1 != MessageBoxResult.OK) {
                     throw new SequenceEntityFailedException(ViewStrings.ScopeNotAtZero);
@@ -92,30 +96,5 @@ namespace ADPUK.NINA.AddToAlignmentModel {
             };
         }
     }
-    public class ModelPoint {
-        public double TargetAlt;
-        public double TargetAz;
-        public string TargetRAString;
-        public double TargetRA;
-        public double TargetDec;
-        public string ActualRAString;
-        public double ActualRA;
-        public double ActualDec;
-        public double Separation;
-
-        public ModelPoint() { }
-        public ModelPoint(TopocentricCoordinates target, PlateSolveResult plateSolveResult) {
-            Coordinates result = plateSolveResult.Coordinates.Transform(Epoch.JNOW);
-            Coordinates targetCoords = target.Transform(Epoch.JNOW);
-            TargetAlt = target.Altitude.Degree;
-            TargetAz = target.Azimuth.Degree;
-            TargetRAString = targetCoords.RAString;
-            TargetRA = targetCoords.RA;
-            TargetDec = targetCoords.Dec;
-            ActualRAString = result.RAString;
-            ActualRA = result.RA;
-            ActualDec = result.Dec;
-            Separation = plateSolveResult.Separation.Distance.Degree;
-        }
-    }
+    
 }
