@@ -38,9 +38,64 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         private IPlateSolverFactory plateSolverFactory;
         private IWindowServiceFactory windowServiceFactory;
         private ICameraMediator cameraMediator;
+        private int _maximumAttempts;
+        private bool? _displayPlateSolveDetails;
+        private int _plateSolveAttempts;
+        private int _plateSolveCloseDelay;
 
-        private IPluginOptionsAccessor pluginSettings
-            ;
+        private IPluginOptionsAccessor pluginSettings;
+
+        [JsonProperty]
+        public int MaximumAttemptsToCentre {
+            get {
+                if (_maximumAttempts <= 0) {
+                    _maximumAttempts = 1;
+                    RaisePropertyChanged();
+                }
+                return _maximumAttempts;
+            }
+            set {
+                _maximumAttempts = value;
+                RaisePropertyChanged();
+            }
+        }
+        [JsonProperty]
+        public bool DisplayPlateSolveDetails {
+            get {
+                if (_displayPlateSolveDetails is null) {
+                    _displayPlateSolveDetails = true;
+                    RaisePropertyChanged();
+                }
+                return _displayPlateSolveDetails ?? true;
+            }
+            set {
+                _displayPlateSolveDetails = value;
+                RaisePropertyChanged();
+            }
+        }
+        [JsonProperty]
+        public int PlaySolveAttempts {
+            get {
+                if (_plateSolveAttempts <= 0) {
+                    _plateSolveAttempts = 0;
+                    RaisePropertyChanged();
+                }
+                return _plateSolveAttempts;
+            }
+            set {
+                _plateSolveAttempts = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        public int PlateSolveCloseDelay {
+            get { return _plateSolveCloseDelay; }
+            set {
+                _plateSolveCloseDelay = value;
+                RaisePropertyChanged();
+            }
+        }
+
         public PlateSolvingStatusVM PlateSolveStatusVM { get; } = new PlateSolvingStatusVM();
 
         [ImportingConstructor]
@@ -91,46 +146,23 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         }
 
         public override async Task Execute(IProgress<ApplicationStatus> progress, CancellationToken token) {
-
-            IWindowService service = windowServiceFactory.Create();
-            progress = PlateSolveStatusVM.CreateLinkedProgress(progress);
-            service.Show(PlateSolveStatusVM, Loc.Instance["Lbl_SequenceItem_Platesolving_SolveAndSync_Name"], System.Windows.ResizeMode.CanResize, System.Windows.WindowStyle.ToolWindow);
             try {
-                if (ADP_Tools.AboveMinAlt(telescopeMediator.GetCurrentPosition(),
-                        profileService.ActiveProfile.AstrometrySettings.Horizon,
-                        profileService.ActiveProfile.AstrometrySettings.Latitude,
-                        pluginSettings.GetValueDouble(nameof(AddToAlignmentModel.MinElevationAboveHorizon), 5.0))) {
-                    PlateSolveResult result = await DoSolve(progress, token);
-                    if (!result.Success) {
-                        throw new SequenceEntityFailedException(Loc.Instance["LblPlatesolveFailed"]);
-                    } else {
-                        Coordinates resultCoordinates = result.Coordinates.Transform(Epoch.JNOW);
-                        string addAlignmentResponse = telescopeMediator.Action("Telescope:AddAlignmentReference", $"{resultCoordinates.RA}:{resultCoordinates.Dec}");
-                    }
-                } else {
-                    Notification.ShowWarning(ViewStrings.TargetBelowHorizon);
-                }
+                progress = PlateSolveStatusVM.CreateLinkedProgress(progress);
+                ModelPointCreator modelCreator = new ModelPointCreator(
+                    cameraMediator,
+                    telescopeMediator,
+                    rotatorMediator,
+                    imagingMediator,
+                    filterWheelMediator,
+                    plateSolverFactory,
+                    windowServiceFactory,
+                    profileService);
+
+                await modelCreator.SolveDirectToMount(MaximumAttemptsToCentre, PlateSolveCloseDelay, progress, token);
             } finally {
-                service.DelayedClose(TimeSpan.FromSeconds(10));
             }
         }
 
-        protected virtual async Task<PlateSolveResult> DoSolve(IProgress<ApplicationStatus> progress, CancellationToken token) {
-            IPlateSolver plateSolver = plateSolverFactory.GetPlateSolver(profileService.ActiveProfile.PlateSolveSettings);
-            IPlateSolver blindSolver = plateSolverFactory.GetBlindSolver(profileService.ActiveProfile.PlateSolveSettings);
-
-            ICaptureSolver solver = plateSolverFactory.GetCaptureSolver(plateSolver, blindSolver, imagingMediator, filterWheelMediator);
-            CaptureSolverParameter parameter = ADP_Tools.CreateCaptureSolverParameter(profileService.ActiveProfile, telescopeMediator.GetCurrentPosition());
-
-            CaptureSequence seq = new CaptureSequence(
-                profileService.ActiveProfile.PlateSolveSettings.ExposureTime,
-                CaptureSequence.ImageTypes.SNAPSHOT,
-                profileService.ActiveProfile.PlateSolveSettings.Filter,
-                new BinningMode(profileService.ActiveProfile.PlateSolveSettings.Binning, profileService.ActiveProfile.PlateSolveSettings.Binning),
-                1
-            );
-            return await solver.Solve(seq, parameter, PlateSolveStatusVM.Progress, progress, token);
-        }
         public virtual bool Validate() {
             Issues = ADP_Tools.ValidateConnections(telescopeMediator.GetInfo(), cameraMediator.GetInfo(), pluginSettings);
             return Issues.Count == 0;

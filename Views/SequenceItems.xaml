@@ -8,7 +8,7 @@
     >
 
 
-    <DataTemplate DataType="{x:Type local:CreateAlignmentModel}">
+    <DataTemplate DataType="{x:Type local:CreateSequenceAlignmentModel}">
         <view:SequenceBlockView>
             <view:SequenceBlockView.SequenceItemContent>
                 <Grid>

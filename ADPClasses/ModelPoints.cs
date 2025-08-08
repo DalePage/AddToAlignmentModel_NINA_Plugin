@@ -52,9 +52,22 @@ namespace ADPUK.NINA.AddToAlignmentModel
         }
 
         public string ActualDecString {
-            get => AstroUtil.DegreesToDMS(((double)ActualDec));
+            get => AstroUtil.DegreesToDMS(ActualDec);
         }
+
         public ModelPoint() { }
+
+        public ModelPoint(Coordinates targetCoords) {
+            TargetAlt = 0d;
+            TargetAz = 0d;
+            TargetRAString = targetCoords.RAString;
+            TargetRA = targetCoords.RA;
+            TargetDec = targetCoords.Dec;
+            ActualRAString = string.Empty;
+            ActualRA = 0d;
+            ActualDec = 0d;
+            Separation = 0d;
+        }
 
         public ModelPoint(TopocentricCoordinates target) {
             Coordinates targetCoords = target.Transform(Epoch.JNOW);

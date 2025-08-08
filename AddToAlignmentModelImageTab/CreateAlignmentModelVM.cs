@@ -31,6 +31,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Navigation;
+using static ADPUK.NINA.AddToAlignmentModel.ModelPointCreator;
 namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
     [Export(typeof(IDockableVM))]
     [JsonObject(MemberSerialization.OptIn)]
@@ -48,6 +49,8 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
         private int _stepCount;
         private bool _isReadOnly;
         private bool _IsPaused;
+        private ModelCreationParameters modelCreationParameters;
+
 
         public bool IsPaused {
             get {
@@ -94,13 +97,18 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
                 RaisePropertyChanged();
             }
         }
+
         [JsonProperty]
         public int NumberOfAzimuthPoints {
-            get { return pluginSettings.GetValueInt32(nameof(NumberOfAzimuthPoints), 4); }
+            get {
+                modelCreationParameters.NumberOfAzimuthPoints = pluginSettings.GetValueInt32(nameof(NumberOfAzimuthPoints), 4);
+                return modelCreationParameters.NumberOfAzimuthPoints;
+            }
             set {
                 if (value < 3) value = 3;
                 if (pluginSettings != null) {
                     pluginSettings?.SetValueInt32(nameof(NumberOfAzimuthPoints), value);
+                    modelCreationParameters.NumberOfAzimuthPoints = value;
                     RaisePropertyChanged("TotalSteps");
                     RaisePropertyChanged();
                 }
@@ -110,11 +118,13 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
 
         public int NumberOfAltitudePoints {
             get {
-                return pluginSettings.GetValueInt32(nameof(NumberOfAltitudePoints), 1);
+                modelCreationParameters.NumberOfAltitudePoints = pluginSettings.GetValueInt32(nameof(NumberOfAltitudePoints), 1);
+                return modelCreationParameters.NumberOfAltitudePoints;
             }
             set {
                 if (pluginSettings != null) {
                     pluginSettings?.SetValueInt32(nameof(NumberOfAltitudePoints), value);
+                    modelCreationParameters.NumberOfAltitudePoints = value;
                     RaisePropertyChanged(nameof(TotalSteps));
                     RaisePropertyChanged();
                 }
@@ -123,10 +133,14 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
         [JsonProperty]
 
         public double MaxElevation {
-            get { return pluginSettings.GetValueDouble(nameof(MaxElevation), 45.0); }
+            get {
+                modelCreationParameters.MaxElevation = pluginSettings.GetValueDouble(nameof(MaxElevation), 45.0);
+                return modelCreationParameters.MaxElevation;
+            }
             set {
                 if (pluginSettings != null) {
                     pluginSettings?.SetValueDouble(nameof(MaxElevation), value);
+                    modelCreationParameters.MaxElevation = value;
                     RaisePropertyChanged();
                 }
             }
@@ -134,10 +148,14 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
         [JsonProperty]
 
         public double MinElevation {
-            get { return pluginSettings.GetValueDouble(nameof(MinElevation), 45.0); }
+            get {
+                modelCreationParameters.MinElevation = pluginSettings.GetValueDouble(nameof(MinElevation), 45.0);
+                return modelCreationParameters.MinElevation;
+            }
             set {
                 if (pluginSettings != null) {
                     pluginSettings?.SetValueDouble(nameof(MinElevation), value);
+                    modelCreationParameters.MinElevation = value;
                     RaisePropertyChanged();
                 }
             }
@@ -145,11 +163,13 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
         [JsonProperty]
         public int SolveAttempts {
             get {
-                return pluginSettings.GetValueInt32(nameof(SolveAttempts), profileService.ActiveProfile.PlateSolveSettings.NumberOfAttempts);
+                modelCreationParameters.SolveAttempts = pluginSettings.GetValueInt32(nameof(SolveAttempts), profileService.ActiveProfile.PlateSolveSettings.NumberOfAttempts);
+                return modelCreationParameters.SolveAttempts;
             }
             set {
                 if (pluginSettings != null) {
                     pluginSettings.SetValueInt32(nameof(SolveAttempts), value);
+                    modelCreationParameters.SolveAttempts = value;
                     RaisePropertyChanged();
                 }
             }
@@ -157,10 +177,14 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
 
         [JsonProperty]
         public int PlateSolveCloseDelay {
-            get => pluginSettings.GetValueInt32(nameof(PlateSolveCloseDelay), 5);
+            get {
+                modelCreationParameters.PlateSolveCloseDelay = pluginSettings.GetValueInt32(nameof(PlateSolveCloseDelay), 5);
+                return modelCreationParameters.PlateSolveCloseDelay;
+            }
             set {
                 if (pluginSettings != null) {
                     pluginSettings.SetValueInt32(nameof(PlateSolveCloseDelay), value);
+                    modelCreationParameters.PlateSolveCloseDelay = value;
                     RaisePropertyChanged();
                 }
             }
@@ -169,11 +193,13 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
         [JsonProperty]
         public double MinElevationAboveHorizon {
             get {
-                return pluginSettings.GetValueDouble(nameof(MinElevationAboveHorizon), 0.0);
+                modelCreationParameters.MinElevationAboveHorizon = pluginSettings.GetValueDouble(nameof(MinElevationAboveHorizon), 0.0);
+                return modelCreationParameters.MinElevationAboveHorizon;
             }
             set {
                 if (pluginSettings != null) {
                     pluginSettings.SetValueDouble(nameof(MinElevationAboveHorizon), value);
+                    modelCreationParameters.MinElevationAboveHorizon = value;
                     RaisePropertyChanged();
                 }
 
@@ -227,7 +253,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
             cameraMediator.Connected += ConnectionChange;
             cameraMediator.Disconnected += ConnectionChange;
             pluginSettings = new PluginOptionsAccessor(profileServiceforBase, Guid.Parse(Assembly.GetExecutingAssembly().GetCustomAttribute<System.Runtime.InteropServices.GuidAttribute>().Value));
-
+            modelCreationParameters = new ModelCreationParameters();
         }
 
         private Task ConnectionChange(object arg1, EventArgs arg2) {
@@ -278,98 +304,47 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
         public async Task ExecuteCreate(IProgress<ApplicationStatus> progress, CancellationToken token) {
             StepCount = 0;
             IsReadOnly = true;
-            IWindowService service = windowServiceFactory.Create();
-            progress = PlateSolveStatusVM.CreateLinkedProgress(progress);
             try {
-                double altStep = 0;
-                if (Math.Abs(MaxElevation - MinElevation) < 5) NumberOfAltitudePoints = 1;
-                if (NumberOfAltitudePoints > 1) {
-                    altStep = ((MaxElevation - MinElevation) / (NumberOfAltitudePoints - 1));
-                } else {
-                    MinElevation = ((MinElevation + MaxElevation) / 2.0);
-                    altStep = (MaxElevation + MinElevation) / 2.0;
-                }
-                double azStep = (360.0 / NumberOfAzimuthPoints);
                 TelescopeInfo telescopeInfo = telescopeMediator.GetInfo();
                 TopocentricCoordinates altAzTarget;
                 double initialAzimuth = ADP_Tools.ReadyToStart(telescopeInfo);
                 double targetAz = initialAzimuth;
-                StepCount = 0;
                 double nextAz = initialAzimuth;
+                StepCount = 0;
+                ModelPointCreator modelCreator = new ModelPointCreator(
+                    cameraMediator,
+                    telescopeMediator,
+                    rotatorMediator,
+                    imagingMediator,
+                    filterWheelMediator,
+                    plateSolverFactory,
+                    windowServiceFactory,
+                    profileService);
                 for (int azc = 1; azc <= NumberOfAzimuthPoints; azc++) {
                     targetAz = nextAz < 360.0 ? nextAz : nextAz - 360.0;
-                    for (double nextAlt = MinElevation; nextAlt <= MaxElevation; nextAlt += altStep) {
+                    for (double nextAlt = MinElevation; nextAlt <= MaxElevation; nextAlt += modelCreationParameters.AltStepSize) {
                         if (IsPaused) { await pauseTask(); }
-                        ModelPoint modelPoint;
-                        service.DelayedClose(new TimeSpan(0, 0, PlateSolveCloseDelay));
                         altAzTarget = new TopocentricCoordinates(
                             Angle.ByDegree(targetAz),
                             Angle.ByDegree(nextAlt),
                             Angle.ByDegree(telescopeInfo.SiteLatitude),
                             Angle.ByDegree(telescopeInfo.SiteLongitude)
                             );
-                        if (ADP_Tools.AboveMinAlt(
-                                altAzTarget,
-                                profileService.ActiveProfile.AstrometrySettings.Horizon,
-                                MinElevationAboveHorizon)) {
-
-                            await telescopeMediator.SlewToCoordinatesAsync(altAzTarget.Transform(Epoch.JNOW), token);
-                            service.Show(PlateSolveStatusVM, Loc.Instance["Lbl_SequenceItem_Platesolving_SolveAndSync_Name"], System.Windows.ResizeMode.CanResize, System.Windows.WindowStyle.ToolWindow);
-                            if (cameraMediator.GetInfo().Connected) {
-                                if (IsPaused) { await pauseTask(); }
-                                PlateSolveResult result = await DoSolve(progress, token);
-                                if (!result.Success) {
-                                    modelPoint = new ModelPoint(altAzTarget);
-                                    modelPoint.ActualRAString = ViewStrings.PlateSolveFailed;
-                                    ModelPoints.Add(modelPoint);
-                                    Notification.ShowWarning($"{ViewStrings.PlateSolveFailedAt.Replace("{{Azimuth}}", targetAz.ToString()).Replace("{{Altitude}}}", targetAz.ToString())}");
-                                } else {
-                                    Coordinates resultCoordinates = result.Coordinates.Transform(Epoch.JNOW);
-                                    string addAlignmentResponse = telescopeMediator.Action("Telescope:AddAlignmentReference", $"{resultCoordinates.RA}:{resultCoordinates.Dec}");
-                                    modelPoint = new ModelPoint(altAzTarget, result);
-                                    ModelPoints.Add(modelPoint);
-                                }
-                            } else {
-                                modelPoint= new ModelPoint(altAzTarget);
-                                modelPoint.ActualRAString = Loc.Instance["Lbl_CameraNotConnected"];
-                                ModelPoints.Add(modelPoint);
-                                Notification.ShowWarning(Loc.Instance["Lbl_CameraNotConnected"]);
-                            }
-                        } else {
-                            Notification.ShowWarning($"{ViewStrings.TargetBelowHorizon.Replace("{{Azimuth}}", targetAz.ToString()).Replace("{{Altitude}}", nextAlt.ToString())}");
-                        }
+                        modelCreationParameters.TargetCoordinatesAltAz = altAzTarget;
+                        ModelPoint modelPoint = await modelCreator.CreateModelPoint(modelCreationParameters, progress, token);
+                        ModelPoints.Add(modelPoint);
                         StepCount++;
                     }
-                    nextAz += azStep;
+                    nextAz += modelCreationParameters.AzStepSize;
                 }
 
             } catch (OperationCanceledException) {
                 Notification.ShowWarning(ViewStrings.ModelBuilderCancelled);
             } finally {
-                service.DelayedClose(new TimeSpan(0, 0, PlateSolveCloseDelay));
                 IsReadOnly = false;
             }
 
         }
-
-        protected virtual async Task<PlateSolveResult> DoSolve(IProgress<ApplicationStatus> progress, CancellationToken token) {
-            IPlateSolver plateSolver = plateSolverFactory.GetPlateSolver(profileService.ActiveProfile.PlateSolveSettings);
-            IPlateSolver blindSolver = plateSolverFactory.GetBlindSolver(profileService.ActiveProfile.PlateSolveSettings);
-
-            ICaptureSolver solver = plateSolverFactory.GetCaptureSolver(plateSolver, blindSolver, imagingMediator, filterWheelMediator);
-
-            CaptureSolverParameter parameter = ADP_Tools.CreateCaptureSolverParameter(profileService.ActiveProfile, telescopeMediator.GetCurrentPosition(), SolveAttempts);
-
-            CaptureSequence seq = new CaptureSequence(
-                profileService.ActiveProfile.PlateSolveSettings.ExposureTime,
-                CaptureSequence.ImageTypes.SNAPSHOT,
-                profileService.ActiveProfile.PlateSolveSettings.Filter,
-                new BinningMode(profileService.ActiveProfile.PlateSolveSettings.Binning, profileService.ActiveProfile.PlateSolveSettings.Binning),
-                1
-            );
-            return await solver.Solve(seq, parameter, PlateSolveStatusVM.Progress, progress, token);
-        }
-
         public virtual bool Validate() {
             Issues = ADP_Tools.ValidateConnections(telescopeMediator.GetInfo(), cameraMediator.GetInfo(), pluginSettings);
             return Issues.Count == 0;

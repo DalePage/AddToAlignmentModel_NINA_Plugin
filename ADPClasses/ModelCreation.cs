@@ -1,4 +1,7 @@
 ﻿using ADPUK.NINA.AddToAlignmentModel.Locales;
+using CommunityToolkit.Mvvm.ComponentModel;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NINA.Astrometry;
 using NINA.Core.Locale;
 using NINA.Core.Model;
@@ -16,6 +19,7 @@ using NINA.WPF.Base.Mediator;
 using NINA.WPF.Base.ViewModel;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -23,7 +27,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace ADPUK.NINA.AddToAlignmentModel {
-    public partial class ModelCreation {
+    public partial class ModelPointCreator {
 
         private ICameraMediator cameraMediator;
         private ITelescopeMediator telescopeMediator;
@@ -33,12 +37,12 @@ namespace ADPUK.NINA.AddToAlignmentModel {
         private IPlateSolverFactory plateSolverFactory;
         private IWindowServiceFactory windowServiceFactory;
         private IProfileService profileService;
-        private PluginOptionsAccessor pluginSettings;
-        private PlateSolvingStatusVM PlateSolveStatusVM { get; } = new PlateSolvingStatusVM();
+        private PlateSolvingStatusVM PlateSolveStatusVM;
+        private IWindowService service;
 
 
 
-        public ModelCreation(
+        public ModelPointCreator(
             ICameraMediator cameraMediator,
             ITelescopeMediator telescopeMediator,
             IRotatorMediator rotatorMediator,
@@ -46,9 +50,7 @@ namespace ADPUK.NINA.AddToAlignmentModel {
             IFilterWheelMediator filterWheelMediator,
             IPlateSolverFactory plateSolverFactory,
             IWindowServiceFactory windowServiceFactory,
-            IProfileService profileService,
-            PluginOptionsAccessor pluginSettings) {
-
+            IProfileService profileService) {
             this.cameraMediator = cameraMediator;
             this.telescopeMediator = telescopeMediator;
             this.rotatorMediator = rotatorMediator;
@@ -56,93 +58,89 @@ namespace ADPUK.NINA.AddToAlignmentModel {
             this.filterWheelMediator = filterWheelMediator;
             this.plateSolverFactory = plateSolverFactory;
             this.windowServiceFactory = windowServiceFactory;
-            this.pluginSettings = pluginSettings;
             this.profileService = profileService;
+            PlateSolveStatusVM = new PlateSolvingStatusVM();
         }
-        public async Task ExecuteCreate(IProgress<ApplicationStatus> progress, CancellationToken token) {
-            int StepCount = 0;
-            IWindowService service = windowServiceFactory.Create();
-            TelescopeInfo telescopeInfo = telescopeMediator.GetInfo();
-            progress = PlateSolveStatusVM.CreateLinkedProgress(progress);
+
+        public async Task<PlateSolveResult> SolveDirectToMount(
+            int solveAttempts, 
+            int plateSolveCloseDelay,
+            IProgress<ApplicationStatus> progress, 
+            CancellationToken token, 
+            bool showDialog = true) {
+
             try {
-                double altStep = 0;
-                if (Math.Abs(MaxElevation - passedParams.MinElevation) < 5) passedParams.NumberOfAltitudePoints = 1;
-                if (passedParams.NumberOfAltitudePoints > 1) {
-                    altStep = ((passedParams.MaxElevation - passedParams.MinElevation) / (passedParams.NumberOfAltitudePoints - 1));
-                } else {
-                    passedParams.MinElevation = ((passedParams.MinElevation + passedParams.MaxElevation) / 2.0);
-                    altStep = (passedParams.MaxElevation + passedParams.MinElevation) / 2.0;
-                }
-                double azStep = (360.0 / passedParams.NumberOfAzimuthPoints);
-                TopocentricCoordinates altAzTarget;
-                double initialAzimuth = ADP_Tools.ReadyToStart(telescopeInfo);
-                double targetAz = initialAzimuth;
-                StepCount = 0;
-                double nextAz = initialAzimuth;
-                for (int azc = 1; azc <= passedParams.NumberOfAzimuthPoints; azc++) {
-                    targetAz = nextAz < 360.0 ? nextAz : nextAz - 360.0;
-                    for (double nextAlt = passedParams.MinElevation; nextAlt <= passedParams.MaxElevation; nextAlt += altStep) {
-                        if (IsPaused) { await pauseTask(); }
-                        ModelPoint modelPoint;
-                        service.DelayedClose(new TimeSpan(0, 0, passedParams.PlateSolveCloseDelay));
-                        altAzTarget = new TopocentricCoordinates(
-                            Angle.ByDegree(targetAz),
-                            Angle.ByDegree(nextAlt),
-                            Angle.ByDegree(telescopeInfo.SiteLatitude),
-                            Angle.ByDegree(telescopeInfo.SiteLongitude)
-                            );
-                        if (ADP_Tools.AboveMinAlt(
-                                altAzTarget,
-                                profileService.ActiveProfile.AstrometrySettings.Horizon,
-                                passedParams.MinElevationAboveHorizon)) {
-
-                            await telescopeMediator.SlewToCoordinatesAsync(altAzTarget.Transform(Epoch.JNOW), token);
-                            service.Show(PlateSolveStatusVM, Loc.Instance["Lbl_SequenceItem_Platesolving_SolveAndSync_Name"], System.Windows.ResizeMode.CanResize, System.Windows.WindowStyle.ToolWindow);
-                            if (cameraMediator.GetInfo().Connected) {
-                                if (IsPaused) { await pauseTask(); }
-                                PlateSolveResult result = await DoSolve(progress, token);
-                                if (!result.Success) {
-                                    modelPoint = new ModelPoint(altAzTarget);
-                                    modelPoint.ActualRAString = ViewStrings.PlateSolveFailed;
-                                    ModelPoints.Add(modelPoint);
-                                    Notification.ShowWarning($"{ViewStrings.PlateSolveFailedAt.Replace("{{Azimuth}}", targetAz.ToString()).Replace("{{Altitude}}}", targetAz.ToString())}");
-                                } else {
-                                    Coordinates resultCoordinates = result.Coordinates.Transform(Epoch.JNOW);
-                                    string addAlignmentResponse = telescopeMediator.Action("Telescope:AddAlignmentReference", $"{resultCoordinates.RA}:{resultCoordinates.Dec}");
-                                    modelPoint = new ModelPoint(altAzTarget, result);
-                                    ModelPoints.Add(modelPoint);
-                                }
-                            } else {
-                                modelPoint = new ModelPoint(altAzTarget);
-                                modelPoint.ActualRAString = Loc.Instance["Lbl_CameraNotConnected"];
-                                ModelPoints.Add(modelPoint);
-                                Notification.ShowWarning(Loc.Instance["Lbl_CameraNotConnected"]);
-                            }
-                        } else {
-                            Notification.ShowWarning($"{ViewStrings.TargetBelowHorizon.Replace("{{Azimuth}}", targetAz.ToString()).Replace("{{Altitude}}", nextAlt.ToString())}");
-                        }
-                        StepCount++;
-                    }
-                    nextAz += azStep;
+                if (showDialog) {
+                    service = windowServiceFactory.Create();
+                    service.Show(PlateSolveStatusVM, Loc.Instance["Lbl_SequenceItem_Platesolving_SolveAndSync_Name"], System.Windows.ResizeMode.CanResize, System.Windows.WindowStyle.ToolWindow);
                 }
 
-            } catch (OperationCanceledException) {
-                Notification.ShowWarning(ViewStrings.ModelBuilderCancelled);
+                PlateSolveResult result = await DoSolve(progress, solveAttempts, token);
+                if (result.Success) {
+                    telescopeMediator.Action("Telescope:AddAlignmentReference", $"{result.Coordinates.RA}:{result.Coordinates.Dec}");
+                }
+
+                return result;
             } finally {
-                service.DelayedClose(new TimeSpan(0, 0, passedParams.PlateSolveCloseDelay));
+                service.DelayedClose(new TimeSpan(0, 0, plateSolveCloseDelay));
+            }
             }
 
+        public async Task<ModelPoint> CreateModelPoint(ModelCreationParameters creationParameters, IProgress<ApplicationStatus> progress, CancellationToken token, bool showDialog = true) {
+            ModelPoint modelPoint = new ModelPoint(creationParameters.TargetCoordinatesAltAz);
+            progress = PlateSolveStatusVM.CreateLinkedProgress(progress);
+            Coordinates target = creationParameters.TargetCoordinatesAltAz.Transform(Epoch.JNOW);
+            try {
+                if (ADP_Tools.AboveMinAlt(
+                        creationParameters.TargetCoordinatesAltAz,
+                        profileService.ActiveProfile.AstrometrySettings.Horizon,
+                        creationParameters.MinElevationAboveHorizon)) {
+
+                    await telescopeMediator.SlewToCoordinatesAsync(target, token);
+                    if (cameraMediator.GetInfo().Connected) {
+                        if (showDialog) {
+                            service = windowServiceFactory.Create();
+                            service.Show(PlateSolveStatusVM, Loc.Instance["Lbl_SequenceItem_Platesolving_SolveAndSync_Name"], System.Windows.ResizeMode.CanResize, System.Windows.WindowStyle.ToolWindow);
+                        }
+                        PlateSolveResult result = await DoSolve(progress, creationParameters.SolveAttempts, token);
+                        if (showDialog) { service.DelayedClose(new TimeSpan(0, 0, creationParameters.PlateSolveCloseDelay)); }
+                        if (!result.Success) {
+                            modelPoint.ActualRAString = ViewStrings.PlateSolveFailed;
+                            Notification.ShowWarning($"{ViewStrings.PlateSolveFailedAt.Replace("{{Azimuth}}",
+                                creationParameters.TargetCoordinatesAltAz.Azimuth.ToString()).Replace("{{Altitude}}}",
+                                creationParameters.TargetCoordinatesAltAz.Altitude.ToString())}");
+                            return modelPoint;
+                        } else {
+                            Coordinates resultCoordinates = result.Coordinates.Transform(Epoch.JNOW);
+                            string addAlignmentResponse = telescopeMediator.Action("Telescope:AddAlignmentReference", $"{resultCoordinates.RA}:{resultCoordinates.Dec}");
+                            modelPoint = new ModelPoint(creationParameters.TargetCoordinatesAltAz, result);
+                            return modelPoint;
+                        }
+                    } else {
+                        modelPoint.ActualRAString = Loc.Instance["Lbl_CameraNotConnected"];
+                        Notification.ShowWarning(Loc.Instance["Lbl_CameraNotConnected"]);
+                        return modelPoint;
+                    }
+                } else {
+                    Notification.ShowWarning($"{ViewStrings.TargetBelowHorizon
+                        .Replace("{{Azimuth}}", creationParameters.TargetCoordinatesAltAz.Azimuth.ToString())
+                        .Replace("{{Altitude}}", creationParameters.TargetCoordinatesAltAz.Altitude.ToString())}");
+                    modelPoint.ActualRAString = ViewStrings.TargetBelowHorizon;
+                    return modelPoint;
+                }
+            } finally {
+                service.DelayedClose(new TimeSpan(0, 0, creationParameters.PlateSolveCloseDelay));
+            }
         }
 
-    }
 
-            protected virtual async Task<PlateSolveResult> DoSolve(IProgress<ApplicationStatus> progress, CancellationToken token) {
+        public virtual async Task<PlateSolveResult> DoSolve(IProgress<ApplicationStatus> progress, int solveAttempts, CancellationToken token) {
             IPlateSolver plateSolver = plateSolverFactory.GetPlateSolver(profileService.ActiveProfile.PlateSolveSettings);
             IPlateSolver blindSolver = plateSolverFactory.GetBlindSolver(profileService.ActiveProfile.PlateSolveSettings);
 
             ICaptureSolver solver = plateSolverFactory.GetCaptureSolver(plateSolver, blindSolver, imagingMediator, filterWheelMediator);
 
-            CaptureSolverParameter parameter = ADP_Tools.CreateCaptureSolverParameter(profileService.ActiveProfile, telescopeMediator.GetCurrentPosition(), SolveAttempts);
+            CaptureSolverParameter parameter = ADP_Tools.CreateCaptureSolverParameter(profileService.ActiveProfile, telescopeMediator.GetCurrentPosition(), solveAttempts);
 
             CaptureSequence seq = new CaptureSequence(
                 profileService.ActiveProfile.PlateSolveSettings.ExposureTime,
@@ -153,14 +151,52 @@ namespace ADPUK.NINA.AddToAlignmentModel {
             );
             return await solver.Solve(seq, parameter, PlateSolveStatusVM.Progress, progress, token);
         }
-    public struct CreatiomParams {
-        public double MinElevationAboveHorizon;
-        public double MinElevation;
-        public double MaxElevation;
-        public int NumberOfAltitudePoints;
-        public int NumberOfAzimuthPoints;
-        public int SolveAttempts;
-        public int PlateSolveCloseDelay;
+        [JsonObject(MemberSerialization.OptIn)]
+        public partial class ModelCreationParameters : ObservableObject {
+            [ObservableProperty]
+            [JsonProperty("MinElevationAboveHorizon")]
+            private double _MinElevationAboveHorizon;
+            [ObservableProperty]
+            [JsonProperty("MinElevation")]
+            private double _MinElevation;
+            [ObservableProperty]
+            [JsonProperty("MaxElevation")]
+            private double _MaxElevation;
+            [ObservableProperty]
+            [JsonProperty("NumberOfAltitudePoints")]
+            private int _NumberOfAltitudePoints;
+            [ObservableProperty]
+            [JsonProperty("NumberOfAzimuthPoints")]
+            private int _NumberOfAzimuthPoints;
+            [ObservableProperty]
+            [JsonProperty("SolveAttempts")]
+            private int _SolveAttempts;
+            [ObservableProperty]
+            [JsonProperty("PlateSolveDelay")]
+            private int _PlateSolveCloseDelay;
+            [JsonIgnore]
+            public TopocentricCoordinates TargetCoordinatesAltAz;
+            [JsonIgnore]
+            public double AltStepSize {
+                get {
+                    double altStep = 0;
+                    if (Math.Abs(MaxElevation - MinElevation) < 5) NumberOfAltitudePoints = 1;
+                    if (NumberOfAltitudePoints > 1) {
+                        altStep = ((MaxElevation - MinElevation) / (NumberOfAltitudePoints - 1));
+                    } else {
+                        MinElevation = ((MinElevation + MaxElevation) / 2d);
+                        altStep = (MaxElevation + MinElevation) / 2d;
+                    }
+                    return altStep;
+                }
+            }
+            public double AzStepSize {
+                get {
+                    return (360d / NumberOfAzimuthPoints);
+
+                }
+            }
+        }
 
     }
 }

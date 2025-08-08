@@ -33,7 +33,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
     [ExportMetadata("Category", "Add To CPWI Alignment Model")]
     [Export(typeof(ISequenceItem))]
     [JsonObject(MemberSerialization.OptIn)]
-    public class CreateAlignmentModel : SequenceItem, IValidatable {
+    public class CreateSequenceAlignmentModel : SequenceItem, IValidatable {
         private IPluginManifest pluginManifest;
         private ICameraMediator cameraMediator;
         private IProfileService profileService;
@@ -51,6 +51,9 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         private int _stepCount;
         private bool _isReadOnly;
         private int _solveAttempts;
+        private ModelPointCreator.ModelCreationParameters modelCreationParameters;
+        private bool? _displayPlateSolveDetails;
+        private int _plateSolveCloseDelay;
 
         public bool IsReadOnly {
             get { return _isReadOnly; }
@@ -70,6 +73,29 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                 RaisePropertyChanged();
             }
         }
+
+        [JsonProperty]
+        public int PlateSolveCloseDelay {
+            get { return _plateSolveCloseDelay; }
+            set { _plateSolveCloseDelay = value; RaisePropertyChanged(); }
+        }
+
+        [JsonProperty]
+        public bool DisplayPlateSolveDetails {
+            get {
+                if (_displayPlateSolveDetails is null) {
+                    _displayPlateSolveDetails = true;
+                    RaisePropertyChanged();
+                }
+                return _displayPlateSolveDetails ?? true;
+            }
+            set {
+                _displayPlateSolveDetails = value;
+                RaisePropertyChanged();
+            }
+
+        }
+
 
         [JsonProperty]
         public int NumberOfAzimuthPoints {
@@ -119,10 +145,10 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                 RaisePropertyChanged();
             }
         }
-        public PlateSolvingStatusVM PlateSolveStatusVM { get; } = new PlateSolvingStatusVM();
+        public PlateSolvingStatusVM PlateSolveStatusVM;
 
         [ImportingConstructor]
-        public CreateAlignmentModel(IProfileService profileService,
+        public CreateSequenceAlignmentModel(IProfileService profileService,
                             ITelescopeMediator telescopeMediator,
                             IRotatorMediator rotatorMediator,
                             IImagingMediator imagingMediator,
@@ -145,9 +171,11 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
             MinElevation = 30.0;
             NumberOfAltitudePoints = 2;
             NumberOfAzimuthPoints = 6;
+            modelCreationParameters = new ModelPointCreator.ModelCreationParameters();
+            PlateSolveStatusVM = new PlateSolvingStatusVM();
         }
 
-        private CreateAlignmentModel(CreateAlignmentModel cloneMe) : this(cloneMe.profileService,
+        private CreateSequenceAlignmentModel(CreateSequenceAlignmentModel cloneMe) : this(cloneMe.profileService,
                                                           cloneMe.telescopeMediator,
                                                           cloneMe.rotatorMediator,
                                                           cloneMe.imagingMediator,
@@ -161,10 +189,11 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
             MinElevation = cloneMe.MinElevation;
             NumberOfAzimuthPoints = cloneMe.NumberOfAzimuthPoints;
             NumberOfAltitudePoints = cloneMe.NumberOfAltitudePoints;
+            modelCreationParameters = new ModelPointCreator.ModelCreationParameters();
         }
 
         public override object Clone() {
-            return new CreateAlignmentModel(this);
+            return new CreateSequenceAlignmentModel(this);
         }
 
         private IList<string> issues = [];
@@ -180,81 +209,32 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         public override async Task Execute(IProgress<ApplicationStatus> progress, CancellationToken token) {
             StepCount = 0;
             IsReadOnly = true;
-            IWindowService service = windowServiceFactory.Create();
-            progress = PlateSolveStatusVM.CreateLinkedProgress(progress);
             try {
-                double altStep = 0;
-                if (NumberOfAltitudePoints > 1) {
-                    altStep = ((MaxElevation - MinElevation) / (NumberOfAltitudePoints - 1));
-                } else {
-                    MinElevation = ((MinElevation + MaxElevation) / 2.0);
-                    altStep = (MaxElevation + MinElevation) / 2.0;
-                }
-                double azStep = (360.0 / NumberOfAzimuthPoints);
-                TelescopeInfo telescopeInfo = telescopeMediator.GetInfo();
-                double initialAzimuth = ADP_Tools.ReadyToStart(telescopeInfo);
-                double targetAz = initialAzimuth;
-                TopocentricCoordinates altAzTarget;
+                StepCount = 0;
+                ModelPointCreator modelCreator = new ModelPointCreator(
+                    cameraMediator,
+                    telescopeMediator,
+                    rotatorMediator,
+                    imagingMediator,
+                    filterWheelMediator,
+                    plateSolverFactory,
+                    windowServiceFactory,
+                    profileService);
+
                 int azCount = 0;
-                double nextAz = initialAzimuth;
                 while (azCount < NumberOfAzimuthPoints) {
                     if (token.IsCancellationRequested) break;
-                    targetAz = nextAz < 360.0 ? nextAz : nextAz - 360.0;
-
-                    for (double nextAlt = MinElevation; nextAlt <= MaxElevation; nextAlt += altStep) {
+                    for (double nextAlt = MinElevation; nextAlt <= MaxElevation; nextAlt += modelCreationParameters.AltStepSize) {
+                        await modelCreator.SolveDirectToMount(SolveAttempts, PlateSolveCloseDelay, progress, token);
                         StepCount++;
-                        altAzTarget = new TopocentricCoordinates(
-                            Angle.ByDegree(targetAz),
-                            Angle.ByDegree(nextAlt),
-                            Angle.ByDegree(telescopeInfo.SiteLatitude),
-                            Angle.ByDegree(telescopeInfo.SiteLongitude)
-                            );
-                        if (ADP_Tools.AboveMinAlt(
-                                altAzTarget,
-                                profileService.ActiveProfile.AstrometrySettings.Horizon,
-                                pluginSettings.GetValueDouble(nameof(AddToAlignmentModel.MinElevationAboveHorizon), 5.0))) {
 
-                            Task[] taskList = [telescopeMediator.SlewToCoordinatesAsync(altAzTarget.Transform(Epoch.JNOW), token), service.Close()];
-                            Task.WaitAll(taskList, token);
-                            if (token.IsCancellationRequested) { return; }
-                            service.Show(PlateSolveStatusVM, Loc.Instance["Lbl_SequenceItem_Platesolving_SolveAndSync_Name"], System.Windows.ResizeMode.CanResize, System.Windows.WindowStyle.ToolWindow);
-                            PlateSolveResult result = await DoSolve(progress, token);
-                            if (!result.Success) {
-                                Notification.ShowWarning($"{ViewStrings.PlateSolveFailedAt.Replace("{{Azimuth}}", targetAz.ToString()).Replace("{{Altitude}}", nextAlt.ToString())}");
-                            } else {
-                                Coordinates resultCoordinates = result.Coordinates.Transform(Epoch.JNOW);
-                                string addAlignmentResponse = telescopeMediator.Action("Telescope:AddAlignmentReference", $"{resultCoordinates.RA}:{resultCoordinates.Dec}");
-                                nextAz = telescopeMediator.GetInfo().Azimuth;
-                            }
-                        } else {
-                            Notification.ShowWarning($"{ViewStrings.TargetBelowHorizon.Replace("{{Azimuth}}", targetAz.ToString()).Replace("{{Altitude}}", nextAlt.ToString())}");
-                        }
                     }
-                    if (token.IsCancellationRequested) break;
-                    nextAz += azStep;
                     azCount++;
                 }
             } finally {
-                service.DelayedClose(new TimeSpan(0, 0, 10));
                 IsReadOnly = false;
             }
 
-        }
-
-        protected virtual async Task<PlateSolveResult> DoSolve(IProgress<ApplicationStatus> progress, CancellationToken token) {
-            IPlateSolver plateSolver = plateSolverFactory.GetPlateSolver(profileService.ActiveProfile.PlateSolveSettings);
-            IPlateSolver blindSolver = plateSolverFactory.GetBlindSolver(profileService.ActiveProfile.PlateSolveSettings);
-
-            ICaptureSolver solver = plateSolverFactory.GetCaptureSolver(plateSolver, blindSolver, imagingMediator, filterWheelMediator);
-            CaptureSolverParameter parameter = ADP_Tools.CreateCaptureSolverParameter(profileService.ActiveProfile, telescopeMediator.GetCurrentPosition(), SolveAttempts);
-            CaptureSequence seq = new CaptureSequence(
-                profileService.ActiveProfile.PlateSolveSettings.ExposureTime,
-                CaptureSequence.ImageTypes.SNAPSHOT,
-                profileService.ActiveProfile.PlateSolveSettings.Filter,
-                new BinningMode(profileService.ActiveProfile.PlateSolveSettings.Binning, profileService.ActiveProfile.PlateSolveSettings.Binning),
-                1
-            );
-            return await solver.Solve(seq, parameter, PlateSolveStatusVM.Progress, progress, token);
         }
 
         public virtual bool Validate() {
@@ -264,7 +244,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
 
 
         public override string ToString() {
-            return $"Category: {Category}, Item: {nameof(CreateAlignmentModel)}";
+            return $"Category: {Category}, Item: {nameof(CreateSequenceAlignmentModel)}";
         }
     }
 
