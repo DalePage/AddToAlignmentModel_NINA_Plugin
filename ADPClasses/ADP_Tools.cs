@@ -1,21 +1,16 @@
 ﻿using ADPUK.NINA.AddToAlignmentModel.Locales;
-using CommunityToolkit.Mvvm.ComponentModel;
 using NINA.Astrometry;
 using NINA.Core.Enum;
 using NINA.Core.Locale;
 using NINA.Core.Model;
-using NINA.Core.Utility;
 using NINA.Equipment.Equipment.MyCamera;
 using NINA.Equipment.Equipment.MyTelescope;
 using NINA.PlateSolving;
-using NINA.Profile;
 using NINA.Profile.Interfaces;
-using NINA.WPF.Base.Mediator;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Windows;
-using System.Xml.Serialization;
 
 namespace ADPUK.NINA.AddToAlignmentModel {
     public partial class ADP_Tools {
@@ -96,5 +91,5 @@ namespace ADPUK.NINA.AddToAlignmentModel {
             };
         }
     }
-    
+
 }

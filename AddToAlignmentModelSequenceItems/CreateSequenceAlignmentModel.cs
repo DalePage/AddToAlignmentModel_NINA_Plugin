@@ -1,15 +1,7 @@
-﻿using ADPUK.NINA.AddToAlignmentModel.Locales;
-using Newtonsoft.Json;
-using NINA.Astrometry;
-using NINA.Core.Locale;
+﻿using Newtonsoft.Json;
 using NINA.Core.Model;
-using NINA.Core.Model.Equipment;
-using NINA.Core.Utility.Notification;
 using NINA.Core.Utility.WindowService;
-using NINA.Equipment.Equipment.MyTelescope;
 using NINA.Equipment.Interfaces.Mediator;
-using NINA.Equipment.Model;
-using NINA.PlateSolving;
 using NINA.PlateSolving.Interfaces;
 using NINA.Plugin.Interfaces;
 using NINA.Profile;
@@ -21,7 +13,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Reflection;
-using System.Resources;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -52,7 +43,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         private bool _isReadOnly;
         private int _solveAttempts;
         private ModelPointCreator.ModelCreationParameters modelCreationParameters;
-        private bool? _displayPlateSolveDetails;
+        private bool _displayPlateSolveDetails;
         private int _plateSolveCloseDelay;
 
         public bool IsReadOnly {
@@ -83,11 +74,8 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         [JsonProperty]
         public bool DisplayPlateSolveDetails {
             get {
-                if (_displayPlateSolveDetails is null) {
-                    _displayPlateSolveDetails = true;
-                    RaisePropertyChanged();
-                }
-                return _displayPlateSolveDetails ?? true;
+
+                return _displayPlateSolveDetails ;
             }
             set {
                 _displayPlateSolveDetails = value;
@@ -173,6 +161,8 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
             NumberOfAzimuthPoints = 6;
             modelCreationParameters = new ModelPointCreator.ModelCreationParameters();
             PlateSolveStatusVM = new PlateSolvingStatusVM();
+            DisplayPlateSolveDetails = true;
+            PlateSolveCloseDelay = 5;
         }
 
         private CreateSequenceAlignmentModel(CreateSequenceAlignmentModel cloneMe) : this(cloneMe.profileService,
@@ -190,6 +180,10 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
             NumberOfAzimuthPoints = cloneMe.NumberOfAzimuthPoints;
             NumberOfAltitudePoints = cloneMe.NumberOfAltitudePoints;
             modelCreationParameters = new ModelPointCreator.ModelCreationParameters();
+            PlateSolveStatusVM = new PlateSolvingStatusVM();
+            pluginSettings = new PluginOptionsAccessor(profileService, Guid.Parse(Assembly.GetExecutingAssembly().GetCustomAttribute<System.Runtime.InteropServices.GuidAttribute>().Value));
+            DisplayPlateSolveDetails = true;
+            PlateSolveCloseDelay = 5;
         }
 
         public override object Clone() {

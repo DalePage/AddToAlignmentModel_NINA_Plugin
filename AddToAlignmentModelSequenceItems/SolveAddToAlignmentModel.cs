@@ -1,14 +1,7 @@
-﻿using ADPUK.NINA.AddToAlignmentModel.Locales;
-using Newtonsoft.Json;
-using NINA.Astrometry;
-using NINA.Core.Locale;
+﻿using Newtonsoft.Json;
 using NINA.Core.Model;
-using NINA.Core.Model.Equipment;
-using NINA.Core.Utility.Notification;
 using NINA.Core.Utility.WindowService;
 using NINA.Equipment.Interfaces.Mediator;
-using NINA.Equipment.Model;
-using NINA.PlateSolving;
 using NINA.PlateSolving.Interfaces;
 using NINA.Profile;
 using NINA.Profile.Interfaces;
@@ -39,34 +32,16 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         private IWindowServiceFactory windowServiceFactory;
         private ICameraMediator cameraMediator;
         private int _maximumAttempts;
-        private bool? _displayPlateSolveDetails;
+        private bool _displayPlateSolveDetails;
         private int _plateSolveAttempts;
         private int _plateSolveCloseDelay;
 
         private IPluginOptionsAccessor pluginSettings;
 
         [JsonProperty]
-        public int MaximumAttemptsToCentre {
-            get {
-                if (_maximumAttempts <= 0) {
-                    _maximumAttempts = 1;
-                    RaisePropertyChanged();
-                }
-                return _maximumAttempts;
-            }
-            set {
-                _maximumAttempts = value;
-                RaisePropertyChanged();
-            }
-        }
-        [JsonProperty]
         public bool DisplayPlateSolveDetails {
             get {
-                if (_displayPlateSolveDetails is null) {
-                    _displayPlateSolveDetails = true;
-                    RaisePropertyChanged();
-                }
-                return _displayPlateSolveDetails ?? true;
+                return _displayPlateSolveDetails;
             }
             set {
                 _displayPlateSolveDetails = value;
@@ -74,12 +49,8 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
             }
         }
         [JsonProperty]
-        public int PlaySolveAttempts {
+        public int PlateSolveAttempts {
             get {
-                if (_plateSolveAttempts <= 0) {
-                    _plateSolveAttempts = 0;
-                    RaisePropertyChanged();
-                }
                 return _plateSolveAttempts;
             }
             set {
@@ -116,8 +87,9 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
             this.plateSolverFactory = plateSolverFactory;
             this.windowServiceFactory = windowServiceFactory;
             this.cameraMediator = cameraMediator;
-            this.pluginSettings = new PluginOptionsAccessor(profileService, Guid.Parse(Assembly.GetExecutingAssembly().GetCustomAttribute<System.Runtime.InteropServices.GuidAttribute>().Value));
-
+            pluginSettings = new PluginOptionsAccessor(profileService, Guid.Parse(Assembly.GetExecutingAssembly().GetCustomAttribute<System.Runtime.InteropServices.GuidAttribute>().Value));
+            DisplayPlateSolveDetails = true;
+            PlateSolveAttempts = 5;
         }
 
         private SolveAddToAlignmentModel(SolveAddToAlignmentModel cloneMe) : this(cloneMe.profileService,
@@ -128,7 +100,11 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                                                           cloneMe.plateSolverFactory,
                                                           cloneMe.windowServiceFactory,
                                                           cloneMe.cameraMediator) {
-            CopyMetaData(cloneMe);
+            CopyMetaData(cloneMe);            
+            DisplayPlateSolveDetails = cloneMe.DisplayPlateSolveDetails;
+            PlateSolveAttempts = cloneMe.PlateSolveAttempts;
+            pluginSettings= cloneMe.pluginSettings;
+
         }
 
         public override object Clone() {
@@ -158,7 +134,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                     windowServiceFactory,
                     profileService);
 
-                await modelCreator.SolveDirectToMount(MaximumAttemptsToCentre, PlateSolveCloseDelay, progress, token);
+                await modelCreator.SolveDirectToMount(PlateSolveAttempts, PlateSolveCloseDelay, progress, token);
             } finally {
             }
         }

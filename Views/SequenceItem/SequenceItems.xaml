@@ -16,8 +16,13 @@
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
                     <StackPanel 
                     Grid.Column="0"
+                    Grid.Row="0"
                     HorizontalAlignment="Left"
                     DataContext="{Binding}" 
                     Orientation="Horizontal" 
@@ -62,16 +67,43 @@
                                 <Binding Path="MaxElevation"  UpdateSourceTrigger="LostFocus" />
                             </TextBox.Text>
                         </TextBox>
+                    </StackPanel>
+                    <StackPanel 
+                    Grid.Column="0"
+                    Grid.Row="2"
+                    HorizontalAlignment="Left"
+                    DataContext="{Binding}" 
+                    Orientation="Horizontal" 
+                    Visibility="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type view:SequenceBlockView}}, Path=DataContext.Inherited, Converter={StaticResource InverseBooleanToVisibilityCollapsedConverter}}">
                         <TextBlock VerticalAlignment="Center" Text="{x:Static locales:ViewStrings.SolveAttempts}" Margin="20,0,5,0" />
                         <TextBox
                         MinWidth="20"
                         Margin="5,0,0,0"
                         TextAlignment="Right"
+                        VerticalAlignment="Center"
                         IsReadOnly="{Binding IsReadOnly}">
                             <TextBox.Text>
                                 <Binding Path="SolveAttempts"  UpdateSourceTrigger="LostFocus" />
                             </TextBox.Text>
                         </TextBox>
+                        <TextBlock VerticalAlignment="Center" Text="{x:Static locales:ViewStrings.PlateSolveDelay}" Margin="20,0,5,0" />
+                        <TextBox
+                        MinWidth="20"
+                        Margin="5,0,0,0"
+                        TextAlignment="Right"
+                        VerticalAlignment="Center"
+                        IsReadOnly="{Binding IsReadOnly}">
+                            <TextBox.Text>
+                                <Binding Path="PlateSolveCloseDelay"  UpdateSourceTrigger="LostFocus" />
+                            </TextBox.Text>
+                        </TextBox>
+                        <TextBlock VerticalAlignment="Center" Text="{x:Static locales:ViewStrings.DisplayPlateSolveStatus}" Margin="20,0,5,0" />
+                        <CheckBox
+                        Margin="5,0,0,0">
+                            <Binding Path="DisplayPlateSolveDetails"  UpdateSourceTrigger="PropertyChanged" />
+                        </CheckBox>
+
+
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right" Grid.Column="1">
                         <TextBlock TextAlignment="Right" Text="{x:Static locales:ViewStrings.Completed}" Margin="5,0,5,0" />
@@ -83,7 +115,8 @@
             </view:SequenceBlockView.SequenceItemContent>
         </view:SequenceBlockView>
     </DataTemplate>
-    <DataTemplate DataType="{x:Type local:SolveAddToAlignmentModelAndCentre}">
+
+    <DataTemplate DataType="{x:Type local:SolveAddToAlignmentModel}">
         <view:SequenceBlockView>
             <view:SequenceBlockView.SequenceItemContent>
                 <Grid>
@@ -93,32 +126,96 @@
                     </Grid.ColumnDefinitions>
                     <StackPanel 
                         Grid.Column="0"
-                        Margin="10,0,0,0"
-                        HorizontalAlignment="Left"
-                        DataContext="{Binding}" 
-                        Orientation="Horizontal" 
-                        Visibility="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type view:SequenceBlockView}}, Path=DataContext.Inherited, Converter={StaticResource InverseBooleanToVisibilityCollapsedConverter}}">
-                        <TextBlock VerticalAlignment="Center" Text="{x:Static locales:ViewStrings.MaxCentreAttempts}" Margin="0,0,5,0"/>
+                        Grid.ColumnSpan="2"
+                    HorizontalAlignment="Left"
+                    DataContext="{Binding}" 
+                    Orientation="Horizontal" 
+                    Visibility="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type view:SequenceBlockView}}, Path=DataContext.Inherited, Converter={StaticResource InverseBooleanToVisibilityCollapsedConverter}}">
+                        <TextBlock VerticalAlignment="Center" Text="{x:Static locales:ViewStrings.SolveAttempts}" Margin="20,0,5,0" />
                         <TextBox
-                            MinWidth="20"
-                            Margin="5,0,0,0"
-                            TextAlignment="Right"
-                            IsReadOnly="{Binding IsReadOnly}">
+                        MinWidth="20"
+                        Margin="5,0,0,0"
+                        TextAlignment="Right"
+                        VerticalAlignment="Center"
+                        IsReadOnly="{Binding IsReadOnly}">
                             <TextBox.Text>
-                                <Binding Path="MaximumAttemptsToCentre" UpdateSourceTrigger="LostFocus" />
+                                <Binding Path="PlateSolveAttempts"  UpdateSourceTrigger="LostFocus" />
                             </TextBox.Text>
                         </TextBox>
-                    </StackPanel>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0" HorizontalAlignment="Right">
-                        <TextBlock TextAlignment="Right" Text="{x:Static locales:ViewStrings.Completed}" Margin="0,0,5,0"/>
-                        <TextBlock TextAlignment="Left" Text="{Binding AttemptCount}" />
-                        <TextBlock TextAlignment="Left" Text="/" />
-                        <TextBlock TextAlignment="Left" Text="{Binding MaximumAttemptsToCentre}" />
+                        <TextBlock VerticalAlignment="Center" Text="{x:Static locales:ViewStrings.PlateSolveDelay}" Margin="20,0,5,0" />
+                        <TextBox
+                        MinWidth="20"
+                        Margin="5,0,0,0"
+                        TextAlignment="Right"
+                        VerticalAlignment="Center"
+                        IsReadOnly="{Binding IsReadOnly}">
+                            <TextBox.Text>
+                                <Binding Path="PlateSolveCloseDelay"  UpdateSourceTrigger="LostFocus" />
+                            </TextBox.Text>
+                        </TextBox>
+                        <TextBlock VerticalAlignment="Center" Text="{x:Static locales:ViewStrings.DisplayPlateSolveStatus}" Margin="20,0,5,0" />
+                        <CheckBox Margin="5,0,0,0" IsChecked="{Binding DisplayPlateSolveDetails}" />
                     </StackPanel>
                 </Grid>
             </view:SequenceBlockView.SequenceItemContent>
         </view:SequenceBlockView>
 
     </DataTemplate>
+
+    <DataTemplate DataType="{x:Type local:SolveAddToAlignmentModelAndCentre}">
+        <view:SequenceBlockView>
+            <view:SequenceBlockView.SequenceItemContent>
+                    <WrapPanel>
+                    <WrapPanel 
+                        
+                        Margin="10,0,0,0"
+                        HorizontalAlignment="Left"
+                        DataContext="{Binding}" 
+                        Orientation="Horizontal" 
+                        Visibility="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type view:SequenceBlockView}}, Path=DataContext.Inherited, Converter={StaticResource InverseBooleanToVisibilityCollapsedConverter}}">
+                        <TextBlock VerticalAlignment="Center" Text="{x:Static locales:ViewStrings.SolveAttempts}" Margin="20,0,5,0" />
+                        <TextBox
+                            MinWidth="20"
+                            Margin="5,0,0,0"
+                            TextAlignment="Right"
+                            VerticalAlignment="Center"
+                            IsReadOnly="{Binding IsReadOnly}"
+                            Text="{Binding PlateSolveAttempts}">
+                        </TextBox>
+                        <TextBlock VerticalAlignment="Center" Text="{x:Static locales:ViewStrings.PlateSolveDelay}" Margin="20,0,5,0" />
+                        <TextBox
+                            MinWidth="20"
+                            Margin="5,0,0,0"
+                            TextAlignment="Right"
+                            VerticalAlignment="Center"
+                            IsReadOnly="{Binding IsReadOnly}"
+                            Text="{Binding PlateCloseSolveDelay}">
+                        </TextBox>
+                        <TextBlock VerticalAlignment="Center" Text="{x:Static locales:ViewStrings.DisplayPlateSolveStatus}" Margin="20,0,5,0" />
+                        <CheckBox
+                        Margin="5,0,0,0"
+                            IsChecked="{Binding DisplayPlateSolveDetails}">
+                        </CheckBox>
+                        <TextBlock VerticalAlignment="Center" Text="{x:Static locales:ViewStrings.MaxCentreAttempts}" Margin="0,0,5,0"/>
+                        <TextBox
+                            MinWidth="20"
+                            Margin="5,0,0,0"
+                            TextAlignment="Right"
+                            IsReadOnly="{Binding IsReadOnly}"
+                            VerticalAlignment="Center"
+                            Text="{Binding MaximumAttemptsToCentre}">
+                        </TextBox>
+
+                        <TextBlock TextAlignment="Right" Text="{x:Static locales:ViewStrings.CentreAttempts}" Margin="0,0,5,0"/>
+                        <TextBlock TextAlignment="Left" Text="{Binding AttemptCount}" />
+                        <TextBlock TextAlignment="Left" Text="/" />
+                        <TextBlock TextAlignment="Left" Text="{Binding MaximumAttemptsToCentre}" />
+                    </WrapPanel>
+                </WrapPanel>
+            </view:SequenceBlockView.SequenceItemContent>
+        </view:SequenceBlockView>
+
+    </DataTemplate>
+
 
 </ResourceDictionary>

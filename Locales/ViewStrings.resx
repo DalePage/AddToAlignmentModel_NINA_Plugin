@@ -219,4 +219,10 @@
   <data name="PlateSolveDelay" xml:space="preserve">
     <value>Delay before closing plate solve window (sec)</value>
   </data>
+  <data name="DisplayPlateSolveStatus" xml:space="preserve">
+    <value>Display plate solve status</value>
+  </data>
+  <data name="CentreAttempts" xml:space="preserve">
+    <value>Completed Centre Attempts</value>
+  </data>
 </root>

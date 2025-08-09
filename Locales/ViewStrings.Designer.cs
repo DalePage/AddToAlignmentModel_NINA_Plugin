@@ -124,11 +124,29 @@ namespace ADPUK.NINA.AddToAlignmentModel.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Completed Centre Attempts.
+        /// </summary>
+        public static string CentreAttempts {
+            get {
+                return ResourceManager.GetString("CentreAttempts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Completed.
         /// </summary>
         public static string Completed {
             get {
                 return ResourceManager.GetString("Completed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Display plate solve status.
+        /// </summary>
+        public static string DisplayPlateSolveStatus {
+            get {
+                return ResourceManager.GetString("DisplayPlateSolveStatus", resourceCulture);
             }
         }
         

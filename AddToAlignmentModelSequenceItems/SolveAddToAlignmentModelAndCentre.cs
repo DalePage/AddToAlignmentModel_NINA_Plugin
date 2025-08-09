@@ -1,14 +1,9 @@
-﻿using ADPUK.NINA.AddToAlignmentModel.Locales;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using NINA.Astrometry;
-using NINA.Core.Locale;
 using NINA.Core.Model;
-using NINA.Core.Model.Equipment;
-using NINA.Core.Utility.Notification;
 using NINA.Core.Utility.WindowService;
 using NINA.Equipment.Interfaces;
 using NINA.Equipment.Interfaces.Mediator;
-using NINA.Equipment.Model;
 using NINA.PlateSolving;
 using NINA.PlateSolving.Interfaces;
 using NINA.Profile;
@@ -20,7 +15,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -45,7 +39,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         private IDomeFollower domeFollower;
         private int _maximumAttempts;
         private int _attemptCount;
-        private bool? _displayPlateSolveDetails;
+        private bool _displayPlateSolveDetails;
         private int _plateSolveAttempts;
         public PlateSolvingStatusVM PlateSolveStatusVM { get; } = new PlateSolvingStatusVM();
         private PluginOptionsAccessor pluginSettings;
@@ -69,19 +63,16 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
             }
         }
         public int AttemptCount {
-            get { return (int)_attemptCount; }
+            get { return _attemptCount; }
             set {
                 _attemptCount = value;
                 RaisePropertyChanged();
             }
         }
+
         public bool DisplayPlateSolveDetails {
             get {
-                if (_displayPlateSolveDetails is null) {
-                    _displayPlateSolveDetails = true;
-                    RaisePropertyChanged();
-                }
-                return _displayPlateSolveDetails ?? true;
+                return _displayPlateSolveDetails;
             }
             set {
                 _displayPlateSolveDetails = value;
@@ -91,10 +82,6 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         [JsonProperty]
         public int PlateSolveAttempts {
             get {
-                if (_plateSolveAttempts <= 0) {
-                    _plateSolveAttempts = 0;
-                    RaisePropertyChanged();
-                }
                 return _plateSolveAttempts;
             }
             set {
@@ -126,6 +113,9 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
             this.domeFollower = domeFollower;
             this.pluginSettings = new PluginOptionsAccessor(profileService, Guid.Parse(Assembly.GetExecutingAssembly().GetCustomAttribute<System.Runtime.InteropServices.GuidAttribute>().Value));
             MaximumAttemptsToCentre = 4;
+            DisplayPlateSolveDetails = true;
+            PlateSolveAttempts = 5;
+            PlateCloseSolveDelay = 5;
         }
 
         private SolveAddToAlignmentModelAndCentre(SolveAddToAlignmentModelAndCentre cloneMe) : this(cloneMe.profileService,
@@ -140,6 +130,9 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                                                           cloneMe.domeFollower
                                                           ) {
             MaximumAttemptsToCentre = cloneMe.MaximumAttemptsToCentre;
+            DisplayPlateSolveDetails = cloneMe.DisplayPlateSolveDetails;
+            PlateSolveAttempts = cloneMe.PlateSolveAttempts;
+            PlateCloseSolveDelay = cloneMe.PlateCloseSolveDelay;
             CopyMetaData(cloneMe);
         }
 
@@ -182,8 +175,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                 result = await modelCreator.SolveDirectToMount(PlateSolveAttempts, PlateCloseSolveDelay, progress, token);
                 if (result.Success) {
                     centred = (Math.Abs(result.Separation.Distance.ArcSeconds) > profileService.ActiveProfile.PlateSolveSettings.Threshold);
-                    while (!centred && AttemptCount <= MaximumAttemptsToCentre && isAboveHorizon) 
-                    {
+                    while (!centred && AttemptCount <= MaximumAttemptsToCentre && isAboveHorizon) {
                         await telescopeMediator.Sync(result.Coordinates);
                         await telescopeMediator.SlewToCoordinatesAsync(currentCoordinates, token);
                         result = await modelCreator.DoSolve(progress, MaximumAttemptsToCentre, token);
@@ -193,7 +185,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
             }
 
         }
-        
+
 
         public virtual bool Validate() {
             Issues = ADP_Tools.ValidateConnections(telescopeMediator.GetInfo(), cameraMediator.GetInfo(), pluginSettings);

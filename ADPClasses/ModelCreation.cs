@@ -1,28 +1,19 @@
 ﻿using ADPUK.NINA.AddToAlignmentModel.Locales;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using NINA.Astrometry;
 using NINA.Core.Locale;
 using NINA.Core.Model;
 using NINA.Core.Model.Equipment;
 using NINA.Core.Utility.Notification;
 using NINA.Core.Utility.WindowService;
-using NINA.Equipment.Equipment.MyTelescope;
 using NINA.Equipment.Interfaces.Mediator;
 using NINA.Equipment.Model;
 using NINA.PlateSolving;
 using NINA.PlateSolving.Interfaces;
-using NINA.Profile;
 using NINA.Profile.Interfaces;
-using NINA.WPF.Base.Mediator;
 using NINA.WPF.Base.ViewModel;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -63,10 +54,10 @@ namespace ADPUK.NINA.AddToAlignmentModel {
         }
 
         public async Task<PlateSolveResult> SolveDirectToMount(
-            int solveAttempts, 
+            int solveAttempts,
             int plateSolveCloseDelay,
-            IProgress<ApplicationStatus> progress, 
-            CancellationToken token, 
+            IProgress<ApplicationStatus> progress,
+            CancellationToken token,
             bool showDialog = true) {
 
             try {
@@ -84,7 +75,7 @@ namespace ADPUK.NINA.AddToAlignmentModel {
             } finally {
                 service.DelayedClose(new TimeSpan(0, 0, plateSolveCloseDelay));
             }
-            }
+        }
 
         public async Task<ModelPoint> CreateModelPoint(ModelCreationParameters creationParameters, IProgress<ApplicationStatus> progress, CancellationToken token, bool showDialog = true) {
             ModelPoint modelPoint = new ModelPoint(creationParameters.TargetCoordinatesAltAz);

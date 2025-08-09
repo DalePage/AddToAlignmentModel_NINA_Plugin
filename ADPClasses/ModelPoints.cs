@@ -1,17 +1,9 @@
-﻿using ADPUK.NINA.AddToAlignmentModel.Locales;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using NINA.Astrometry;
 using NINA.PlateSolving;
-using NINA.Profile.Interfaces;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace ADPUK.NINA.AddToAlignmentModel
-{
+namespace ADPUK.NINA.AddToAlignmentModel {
     public partial class ModelPoint : ObservableObject {
 
         [ObservableProperty]
@@ -37,15 +29,15 @@ namespace ADPUK.NINA.AddToAlignmentModel
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(SeparationString))]
         private double _Separation;
-        
+
         public string TargetAltString {
             get => AstroUtil.DegreesToDMS(TargetAlt);
-            }
+        }
         public string TargetAzString {
             get => AstroUtil.DegreesToDMS(TargetAz);
         }
         public string TargetDecString {
-            get => AstroUtil.DegreesToDMS((double)TargetDec); 
+            get => AstroUtil.DegreesToDMS((double)TargetDec);
         }
         public string SeparationString {
             get => AstroUtil.DegreesToDMS(Separation);
@@ -87,7 +79,7 @@ namespace ADPUK.NINA.AddToAlignmentModel
             Coordinates targetCoords = target.Transform(Epoch.JNOW);
             TargetAlt = target.Altitude.Degree;
             TargetAz = target.Azimuth.Degree;
-            TargetRAString =targetCoords.RAString;
+            TargetRAString = targetCoords.RAString;
             TargetRA = targetCoords.RA;
             TargetDec = targetCoords.Dec;
             ActualRAString = result.RAString;
