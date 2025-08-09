@@ -124,6 +124,15 @@ namespace ADPUK.NINA.AddToAlignmentModel.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add Current Position.
+        /// </summary>
+        public static string BtnAddCurrentLocation {
+            get {
+                return ResourceManager.GetString("BtnAddCurrentLocation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Completed Centre Attempts.
         /// </summary>
         public static string CentreAttempts {
@@ -273,6 +282,15 @@ namespace ADPUK.NINA.AddToAlignmentModel.Locales {
         public static string PlateSolveFailedAt {
             get {
                 return ResourceManager.GetString("PlateSolveFailedAt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Target at RA: {{RA}}, Alt: {{Dec}} is failed..
+        /// </summary>
+        public static string PlateSolveFailedRADec {
+            get {
+                return ResourceManager.GetString("PlateSolveFailedRADec", resourceCulture);
             }
         }
         

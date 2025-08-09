@@ -31,10 +31,28 @@ namespace ADPUK.NINA.AddToAlignmentModel {
         private double _Separation;
 
         public string TargetAltString {
-            get => AstroUtil.DegreesToDMS(TargetAlt);
+            get {
+                if (TargetAlt == 0d) {
+                    return "*";
+                }
+                return AstroUtil.DegreesToDMS(TargetAlt);
+            }
+            set {
+                TargetAltString = value;
+                OnPropertyChanged(nameof(TargetAltString));
+            }
         }
         public string TargetAzString {
-            get => AstroUtil.DegreesToDMS(TargetAz);
+            get {
+                if (TargetAz == 0d) {
+                    return "*";
+                }
+                return AstroUtil.DegreesToDMS(TargetAz);
+            }
+            set {
+                TargetAltString = value;
+                OnPropertyChanged($"{nameof(TargetAzString)}");
+            }
         }
         public string TargetDecString {
             get => AstroUtil.DegreesToDMS((double)TargetDec);
@@ -49,6 +67,16 @@ namespace ADPUK.NINA.AddToAlignmentModel {
 
         public ModelPoint() { }
 
+        public ModelPoint(Coordinates targetCoords, PlateSolveResult result) {
+            TargetAlt = 0d;
+            TargetAz = 0d;
+            TargetRAString = targetCoords.RAString;
+            TargetRA = targetCoords.RA;
+            TargetDec = targetCoords.Dec;
+            ActualRA = result.Coordinates.RADegrees;
+            ActualDec = result.Coordinates.Dec;
+            Separation = result.Separation.Distance.Degree;
+        }
         public ModelPoint(Coordinates targetCoords) {
             TargetAlt = 0d;
             TargetAz = 0d;

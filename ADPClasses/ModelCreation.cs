@@ -14,6 +14,7 @@ using NINA.PlateSolving.Interfaces;
 using NINA.Profile.Interfaces;
 using NINA.WPF.Base.ViewModel;
 using System;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -77,6 +78,29 @@ namespace ADPUK.NINA.AddToAlignmentModel {
             }
         }
 
+        public async Task<ModelPoint> GetCurrentLocation(int solveAttempts, int plateSolveCloseDelay, IProgress<ApplicationStatus> progress, CancellationToken token, bool showDialog = true) {
+            Coordinates currentPostion = telescopeMediator.GetCurrentPosition();
+            progress = PlateSolveStatusVM.CreateLinkedProgress(progress);
+            if (showDialog) {
+                    service = windowServiceFactory.Create();
+                    service.Show(PlateSolveStatusVM, Loc.Instance["Lbl_SequenceItem_Platesolving_SolveAndSync_Name"], System.Windows.ResizeMode.CanResize, System.Windows.WindowStyle.ToolWindow);
+            }
+            PlateSolveResult result = await DoSolve(progress, solveAttempts, token);
+            service.DelayedClose(new TimeSpan(0,0, plateSolveCloseDelay));
+            if (!result.Success) {
+                ModelPoint modelPoint = new ModelPoint() {
+                    ActualRAString = ViewStrings.PlateSolveFailed
+                };
+                Notification.ShowWarning($"{ViewStrings.PlateSolveFailedRADec.Replace("{{RA}}",
+                    currentPostion.RAString).Replace("{{Dec}}}",
+                    currentPostion.DecString)}");
+                return modelPoint;
+            } else {
+                Coordinates resultCoordinates = result.Coordinates.Transform(Epoch.JNOW);
+                string addAlignmentResponse = telescopeMediator.Action("Telescope:AddAlignmentReference", $"{resultCoordinates.RA}:{resultCoordinates.Dec}");
+                return  new ModelPoint(currentPostion , result);
+            }
+        }
         public async Task<ModelPoint> CreateModelPoint(ModelCreationParameters creationParameters, IProgress<ApplicationStatus> progress, CancellationToken token, bool showDialog = true) {
             ModelPoint modelPoint = new ModelPoint(creationParameters.TargetCoordinatesAltAz);
             progress = PlateSolveStatusVM.CreateLinkedProgress(progress);

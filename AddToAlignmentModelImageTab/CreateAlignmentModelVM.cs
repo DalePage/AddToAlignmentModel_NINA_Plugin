@@ -61,6 +61,8 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
         public IRelayCommand PauseCreate { get; }
         public IAsyncRelayCommand ResumeCreate { get; }
 
+        public IAsyncRelayCommand AddLocation { get; }
+
         public bool CanExecute { get { return Validate(); } }
 
         public ListModelModelPoints ModelPoints {
@@ -237,6 +239,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
             PauseCreate = new AsyncRelayCommand(PauseCreation);
             StopCreate = new AsyncRelayCommand(CancelCreation);
             ResumeCreate = new AsyncRelayCommand(ResumeCreation);
+            AddLocation = new AsyncRelayCommand(AddCurrentLocationToModel);
             telescopeMediator.Connected += ConnectionChange;
             telescopeMediator.Disconnected += ConnectionChange;
             cameraMediator.Connected += ConnectionChange;
@@ -333,6 +336,25 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
                 IsReadOnly = false;
             }
 
+        }
+        public Task AddCurrentLocationToModel() {
+            Task createTask = AddCurrentLocationToModel(new Progress<ApplicationStatus>(), executeCTS.Token);
+            pauseCTS = new CancellationTokenSource();
+            return createTask;
+
+        }
+        public async Task AddCurrentLocationToModel(IProgress<ApplicationStatus> progress, CancellationToken token) {
+            ModelPointCreator modelCreator = new ModelPointCreator(
+                cameraMediator,
+                telescopeMediator,
+                rotatorMediator,
+                imagingMediator,
+                filterWheelMediator,
+                plateSolverFactory,
+                windowServiceFactory,
+                profileService);
+            ModelPoint newPoint = await modelCreator.GetCurrentLocation(SolveAttempts, PlateSolveCloseDelay, progress, token, true);
+            ModelPoints.Add(newPoint);
         }
         public virtual bool Validate() {
             Issues = ADP_Tools.ValidateConnections(telescopeMediator.GetInfo(), cameraMediator.GetInfo(), pluginSettings);

@@ -146,8 +146,10 @@
                 <TextBlock TextAlignment="Left" Text="/" />
                 <TextBlock TextAlignment="Left" Text="{Binding TotalSteps}" />
             </StackPanel>
-            <ninactrl:AsyncProcessButton
-                    Width="135"
+                <ninactrl:AsyncProcessButton
+                    Margin="5"
+                    MinWidth="140"
+                    Padding="2"
                     Height="25"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Top"
@@ -162,7 +164,21 @@
                     ResumeCommand="{Binding ResumeCreate}"
                     IsEnabled ="{Binding CanExecute}"/>
 
+                <ninactrl:AsyncProcessButton
+                    Margin="5"
+                    MinWidth="140"
+                    Padding="5"
+                    Height="25"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top"
+                    ButtonText="{x:Static locales:ViewStrings.BtnAddCurrentLocation}"
+                    Command="{Binding AddLocation}"
+                    IsEnabled ="{Binding CanExecute}"/>
+            
+            
+            
         </StackPanel>
+
 
     </DataTemplate>
 </ResourceDictionary>

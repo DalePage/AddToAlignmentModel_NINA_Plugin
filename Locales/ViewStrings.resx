@@ -225,4 +225,10 @@
   <data name="CentreAttempts" xml:space="preserve">
     <value>Completed Centre Attempts</value>
   </data>
+  <data name="PlateSolveFailedRADec" xml:space="preserve">
+    <value>Target at RA: {{RA}}, Alt: {{Dec}} is failed.</value>
+  </data>
+  <data name="BtnAddCurrentLocation" xml:space="preserve">
+    <value>Add Current Position</value>
+  </data>
 </root>
