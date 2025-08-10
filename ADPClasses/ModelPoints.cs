@@ -1,7 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using NINA.Astrometry;
 using NINA.PlateSolving;
+using System;
 using System.Collections.ObjectModel;
+using System.Net.Security;
 
 namespace ADPUK.NINA.AddToAlignmentModel {
     public partial class ModelPoint : ObservableObject {
@@ -74,8 +76,13 @@ namespace ADPUK.NINA.AddToAlignmentModel {
             TargetRA = targetCoords.RA;
             TargetDec = targetCoords.Dec;
             ActualRA = result.Coordinates.RADegrees;
+            ActualRAString = result.Coordinates.RAString;
             ActualDec = result.Coordinates.Dec;
-            Separation = result.Separation.Distance.Degree;
+            if (result.Separation is null) {
+                Separation = Math.Sqrt((Math.Pow((targetCoords.RA - result.Coordinates.RA), 2)) + (Math.Pow((targetCoords.Dec - result.Coordinates.Dec), 2)));
+            } else {
+                Separation = result.Separation.Distance.Degree;
+            }
         }
         public ModelPoint(Coordinates targetCoords) {
             TargetAlt = 0d;
@@ -113,7 +120,11 @@ namespace ADPUK.NINA.AddToAlignmentModel {
             ActualRAString = result.RAString;
             ActualRA = result.RA;
             ActualDec = result.Dec;
-            Separation = plateSolveResult.Separation.Distance.Degree;
+            if (plateSolveResult.Separation is null) {
+                Separation =Math.Sqrt((Math.Pow((targetCoords.RA-result.RA), 2)) + (Math.Pow((targetCoords.Dec - result.Dec),2)));
+            } else {
+                Separation = plateSolveResult.Separation.Distance.Degree;
+            }
         }
     }
     public class ListModelModelPoints : ObservableCollection<ModelPoint> {
