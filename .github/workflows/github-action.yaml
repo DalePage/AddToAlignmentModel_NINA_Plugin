@@ -126,7 +126,7 @@ jobs:
           cd nina.plugin.manifests
           git pull --rebase https://github.com/isbeorn/nina.plugin.manifests main
           git add .
-          git commit -m "Add manifest for release ${{ github.ref_name }}"
+          git commit -m "Manifest for release ${{ github.ref_name }}"
           git push origin "${{ env.PLUGIN_NAME_SANITIZED }}/${{ github.ref_name }}"
 
 #     - name: Create pull request
