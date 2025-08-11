@@ -4,8 +4,8 @@ using System.Windows;
 namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab {
     [Export(typeof(ResourceDictionary))]
 
-    public partial class AlignmentModelVM {
-        public AlignmentModelVM() {
+    public partial class AlignmentModelView {
+        public AlignmentModelView() {
             InitializeComponent();
         }
     }

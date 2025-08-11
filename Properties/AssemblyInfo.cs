@@ -6,8 +6,8 @@ using System.Runtime.InteropServices;
 
 // [MANDATORY] The assembly versioning
 //Should be incremented for each new release build of a plugin
-[assembly: AssemblyVersion("1.0.0.1")]
-[assembly: AssemblyFileVersion("1.0.0.1")]
+[assembly: AssemblyVersion("0.0.0.1")]
+[assembly: AssemblyFileVersion("0.0.0.1")]
 
 // [MANDATORY] The name of your plugin
 [assembly: AssemblyTitle("Add To CPWI Alt-Az Alignment Model")]
@@ -23,7 +23,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCopyright("Copyright © 2025 ADPUK")]
 
 // The minimum Version of N.I.N.A. that this plugin is compatible with
-[assembly: AssemblyMetadata("MinimumApplicationVersion", "3.2.0.2001")]
+[assembly: AssemblyMetadata("MinimumApplicationVersion", "3.1.0.9001")]
 
 // The license your plugin code is using
 [assembly: AssemblyMetadata("License", "MPL-2.0")]
@@ -61,7 +61,9 @@ of various forum posts and observations the mount ""Sync"" command in CPWI does 
 to overcome this challenge. Potentially these could be called from a trigger but I have not yet had time to do that yet.
 
 The plugin has been developed and tested using CPWI with a Celestron Astro-Fi 6 mount and scope. It is beleived it will 
-work with other CPWI controlled Alt Azimuth mounts but it cannot be guranteed.")]
+work with other CPWI controlled Alt Azimuth mounts but it cannot be guranteed.
+
+For the brave at heart there is an option to try turn off the check that a Alt-Az mount is in use. As I don't have access to CPWI connected equatorial it is untested")]
 
 // Setting ComVisible to false makes the types in this assembly not visible
 // to COM components.  If you need to access a type in this assembly from

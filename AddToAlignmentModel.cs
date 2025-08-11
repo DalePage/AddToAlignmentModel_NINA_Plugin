@@ -93,6 +93,7 @@ namespace ADPUK.NINA.AddToAlignmentModel {
         public double MaxElevation {
             get { return pluginSettings.GetValueDouble(nameof(MaxElevation), 80.0); }
             set {
+                if (value > 85.0) value = 85.0;
                 pluginSettings.SetValueDouble(nameof(MaxElevation), value);
                 RaisePropertyChanged("total_Steps");
                 RaisePropertyChanged();
@@ -102,6 +103,7 @@ namespace ADPUK.NINA.AddToAlignmentModel {
         public double MinElevation {
             get { return pluginSettings.GetValueDouble(nameof(MinElevation), 35.0); }
             set {
+                if (value < 0.0) value = 0.0;
                 pluginSettings.SetValueDouble(nameof(MinElevation), value);
                 RaisePropertyChanged("total_Steps");
                 RaisePropertyChanged();
@@ -109,13 +111,32 @@ namespace ADPUK.NINA.AddToAlignmentModel {
         }
         public int SolveAttempts {
             get { return pluginSettings.GetValueInt32(nameof(SolveAttempts), 1); }
-            set { 
+            set {
                 pluginSettings.SetValueInt32(nameof(SolveAttempts), value);
                 RaisePropertyChanged();
             }
-            
-        }
 
+        }
+        public double MinElevationAboveHorizon {
+            get {
+                var mh = pluginSettings.GetValueDouble(nameof(MinElevationAboveHorizon), 0.0);
+                if (mh == 0.0) return 0.0;
+                return mh;
+            }
+            set {
+                if (value < 0.0) value = 0.0;
+                if (value >= MaxElevation) value = MaxElevation;
+                pluginSettings.SetValueDouble(nameof(MinElevationAboveHorizon), value);
+                RaisePropertyChanged();
+            }
+        }
+        public bool EnableEquatorialMounts {
+            get { return pluginSettings.GetValueBoolean(nameof(EnableEquatorialMounts), false); }
+            set {
+                pluginSettings.SetValueBoolean(nameof(EnableEquatorialMounts), value);
+                RaisePropertyChanged();
+            }
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
         protected void RaisePropertyChanged([CallerMemberName] string propertyName = null) {

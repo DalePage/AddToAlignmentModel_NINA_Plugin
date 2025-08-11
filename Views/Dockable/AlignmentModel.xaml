@@ -1,0 +1,184 @@
+﻿<ResourceDictionary     
+    x:Class="ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab.AlignmentModelView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab"
+    xmlns:locales="clr-namespace:ADPUK.NINA.AddToAlignmentModel.Locales"
+    xmlns:ninactrl="clr-namespace:NINA.CustomControlLibrary;assembly=NINA.CustomControlLibrary">
+
+    <DataTemplate x:Key="ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelImageTab.CreateAlignmentModelVM_Dockable">
+        <StackPanel Orientation="Vertical" Margin="10,10,10,10" Width="Auto" VerticalAlignment="Top" HorizontalAlignment="Center">
+            <StackPanel.Resources>
+                <Style x:Key="LocalDataGridCellStyle" TargetType="DataGridCell" BasedOn="{StaticResource MyDataGridCell}">
+                    <Setter Property="BorderThickness" Value="1"/>
+                    <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+                    <Setter Property="Padding" Value="15,5,15,5" />
+                </Style>
+                <Style x:Key="LocalDataGridHeaderStyle" TargetType="DataGridColumnHeader" BasedOn="{StaticResource StandardDataGridColumnHeader}">
+                    <Setter Property="BorderThickness"  Value="1" />
+                    <Setter Property="Padding" Value="15,5,15,5" />
+                </Style>
+            </StackPanel.Resources>
+            <TextBlock Text="{x:Static locales:ViewStrings.AlignmentModel}" TextAlignment="Center" Margin="10,10,10,10" FontWeight="DemiBold" FontSize="20"/>
+            <Grid Margin="10" HorizontalAlignment="Center" >
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="{x:Static locales:ViewStrings.NumberOfAzimuthPoints}" Margin="10,0,0,0" />
+                <TextBox Grid.Row="0" Grid.Column="1"
+                        MinWidth="20"
+                        Margin="5"
+                        TextAlignment="Right"
+                        IsReadOnly="{Binding IsReadOnly}">
+                    <TextBox.Text>
+                        <Binding Path="NumberOfAzimuthPoints" UpdateSourceTrigger="LostFocus" />
+                    </TextBox.Text>
+                </TextBox>
+                <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Text="{x:Static locales:ViewStrings.NumberOfAltitudePoints}" Margin="10,0,0,0"/>
+                <TextBox
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        MinWidth="20"
+                        Margin="5"
+                        TextAlignment="Right"
+                        IsReadOnly="{Binding IsReadOnly}">
+                    <TextBox.Text>
+                        <Binding Path="NumberOfAltitudePoints"  UpdateSourceTrigger="LostFocus" />
+                    </TextBox.Text>
+                </TextBox>
+                <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Text="{x:Static locales:ViewStrings.MinimumElevation}" Margin="10,0,0,0" />
+                <TextBox
+                        Grid.Row="2"
+                        Grid.Column="1"
+                        MinWidth="20"
+                        Margin="5"
+                        TextAlignment="Right"
+                        IsReadOnly="{Binding IsReadOnly}">
+                    <TextBox.Text>
+                        <Binding Path="MinElevation" UpdateSourceTrigger="LostFocus" />
+                    </TextBox.Text>
+                </TextBox>
+                <TextBlock Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" Text="{x:Static locales:ViewStrings.MaximumElevation}" Margin="10,0,0,0" />
+                <TextBox
+                        Grid.Row="3"
+                        Grid.Column="1"
+                        MinWidth="20"
+                        Margin="5"
+                        TextAlignment="Right"
+                        IsReadOnly="{Binding IsReadOnly}">
+                    <TextBox.Text>
+                        <Binding Path="MaxElevation"  UpdateSourceTrigger="LostFocus" />
+                    </TextBox.Text>
+                </TextBox>
+                <TextBlock Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Text="{x:Static locales:ViewStrings.SolveAttempts}" Margin="10,0,0,0" />
+                <TextBox
+                        Grid.Row="4"
+                        Grid.Column="1"
+                        MinWidth="20"
+                        Margin="5"
+                        TextAlignment="Right"
+                        IsReadOnly="{Binding IsReadOnly}">
+                    <TextBox.Text>
+                        <Binding Path="SolveAttempts"  UpdateSourceTrigger="LostFocus" />
+                    </TextBox.Text>
+                </TextBox>
+                <TextBlock Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Text="{x:Static locales:ViewStrings.SolveAttempts}" Margin="10,0,0,0" />
+                <TextBox
+                        Grid.Row="4"
+                        Grid.Column="1"
+                        MinWidth="20"
+                        Margin="5"
+                        TextAlignment="Right"
+                        IsReadOnly="{Binding IsReadOnly}">
+                    <TextBox.Text>
+                        <Binding Path="SolveAttempts"  UpdateSourceTrigger="LostFocus" />
+                    </TextBox.Text>
+                </TextBox>
+
+                <TextBlock Grid.Row="6" Grid.Column="0" VerticalAlignment="Center" Text="{x:Static locales:ViewStrings.PlateSolveDelay}" Margin="10,0,0,0" />
+                <TextBox
+                        Grid.Row="6"
+                        Grid.Column="1"
+                        MinWidth="20"
+                        Margin="5"
+                        TextAlignment="Right">
+                    <TextBox.Text>
+                        <Binding Path="PlateSolveCloseDelay"  UpdateSourceTrigger="LostFocus" />
+                    </TextBox.Text>
+                </TextBox>
+            </Grid>
+
+            <DataGrid 
+                Name="AlignmentModelGrid" 
+                ItemsSource="{Binding ModelPoints}" 
+                IsReadOnly="True" 
+                Margin="0,10,0,10" 
+                AutoGenerateColumns="False" 
+                VerticalScrollBarVisibility="Auto"
+                GridLinesVisibility="All"
+                ColumnHeaderStyle="{StaticResource LocalDataGridHeaderStyle}"
+                >
+
+                <DataGrid.Columns>
+                    <DataGridTextColumn CellStyle="{StaticResource LocalDataGridCellStyle}" Header="{x:Static locales:ViewStrings.TargetAz}"  Binding="{Binding TargetAzString}"  />
+                    <DataGridTextColumn CellStyle="{StaticResource LocalDataGridCellStyle}" Header="{x:Static locales:ViewStrings.TargetAlt}" Binding="{Binding TargetAltString}" />
+                    <DataGridTextColumn CellStyle="{StaticResource LocalDataGridCellStyle}" Header="{x:Static locales:ViewStrings.TargetRA}"  Binding="{Binding TargetRAString}" />
+                    <DataGridTextColumn CellStyle="{StaticResource LocalDataGridCellStyle}" Header="{x:Static locales:ViewStrings.TargetDec}"  Binding="{Binding TargetDecString}"/>
+                    <DataGridTextColumn CellStyle="{StaticResource LocalDataGridCellStyle}" Header="{x:Static locales:ViewStrings.ActualRA}"  Binding="{Binding ActualRAString}" />
+                    <DataGridTextColumn CellStyle="{StaticResource LocalDataGridCellStyle}" Header="{x:Static locales:ViewStrings.ActualDec}"  Binding="{Binding ActualDecString}"/>
+                    <DataGridTextColumn CellStyle="{StaticResource LocalDataGridCellStyle}" Header="{x:Static locales:ViewStrings.Separation}" Binding="{Binding SeparationString}" />
+                </DataGrid.Columns>
+
+            </DataGrid>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0" HorizontalAlignment="Center">
+                <TextBlock TextAlignment="Right" Text="{x:Static locales:ViewStrings.Completed}"/>
+                <TextBlock TextAlignment="Left" Text="{Binding StepCount}" />
+                <TextBlock TextAlignment="Left" Text="/" />
+                <TextBlock TextAlignment="Left" Text="{Binding TotalSteps}" />
+            </StackPanel>
+                <ninactrl:AsyncProcessButton
+                    Margin="5"
+                    MinWidth="140"
+                    Padding="2"
+                    Height="25"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top"
+                    ButtonImage="{StaticResource PlaySVG}"
+                    CancelButtonImage="{StaticResource StopSVG}"
+                    CancelCommand="{Binding StopCreate}"
+                    Command="{Binding StartCreate}"
+                    IsPaused="{Binding IsPaused}"
+                    PauseButtonImage="{StaticResource PauseSVG}"
+                    PauseCommand="{Binding PauseCreate}"
+                    ResumeButtonImage="{StaticResource PlaySVG}"
+                    ResumeCommand="{Binding ResumeCreate}"
+                    IsEnabled ="{Binding CanExecute}"/>
+
+                <ninactrl:AsyncProcessButton
+                    Margin="5"
+                    MinWidth="140"
+                    Padding="5"
+                    Height="25"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top"
+                    ButtonText="{x:Static locales:ViewStrings.BtnAddCurrentLocation}"
+                    Command="{Binding AddLocation}"
+                    IsEnabled ="{Binding CanExecute}"/>
+            
+            
+            
+        </StackPanel>
+
+
+    </DataTemplate>
+</ResourceDictionary>

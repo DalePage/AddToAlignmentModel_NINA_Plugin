@@ -1,16 +1,12 @@
 ﻿using Newtonsoft.Json;
 using NINA.Astrometry;
-using NINA.Core.Enum;
-using NINA.Core.Locale;
 using NINA.Core.Model;
-using NINA.Core.Model.Equipment;
-using NINA.Core.Utility.Notification;
 using NINA.Core.Utility.WindowService;
 using NINA.Equipment.Interfaces;
 using NINA.Equipment.Interfaces.Mediator;
-using NINA.Equipment.Model;
 using NINA.PlateSolving;
 using NINA.PlateSolving.Interfaces;
+using NINA.Profile;
 using NINA.Profile.Interfaces;
 using NINA.Sequencer.SequenceItem;
 using NINA.Sequencer.Validations;
@@ -18,14 +14,14 @@ using NINA.WPF.Base.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Text.RegularExpressions;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
     [ExportMetadata("Name", "Solve and Add to Alignment Model and Centre")]
     [ExportMetadata("Description", "The instruction carries out a plate solve and adds the computed location to the mount's alignment model and " +
-        "then slews to the original target and repeats until within alignment platesolve tolerance")]
+        "then slews to the original target and repeats until within the alignment platesolve tolerance")]
     [ExportMetadata("Icon", "CrosshairSVG")]
     [ExportMetadata("Category", "Add To CPWI Alignment Model")]
     [Export(typeof(ISequenceItem))]
@@ -43,7 +39,20 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         private IDomeFollower domeFollower;
         private int _maximumAttempts;
         private int _attemptCount;
+        private bool _displayPlateSolveDetails;
+        private int _plateSolveAttempts;
         public PlateSolvingStatusVM PlateSolveStatusVM { get; } = new PlateSolvingStatusVM();
+        private PluginOptionsAccessor pluginSettings;
+        private int _plateSolveCloseDelay;
+
+        [JsonProperty]
+        public int PlateCloseSolveDelay {
+            get { return _plateSolveCloseDelay; }
+            set {
+                _plateSolveCloseDelay = value;
+                RaisePropertyChanged();
+            }
+        }
 
         [JsonProperty]
         public int MaximumAttemptsToCentre {
@@ -54,9 +63,29 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
             }
         }
         public int AttemptCount {
-            get { return (int)_attemptCount; }
+            get { return _attemptCount; }
             set {
                 _attemptCount = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        public bool DisplayPlateSolveDetails {
+            get {
+                return _displayPlateSolveDetails;
+            }
+            set {
+                _displayPlateSolveDetails = value;
+                RaisePropertyChanged();
+            }
+        }
+        [JsonProperty]
+        public int PlateSolveAttempts {
+            get {
+                return _plateSolveAttempts;
+            }
+            set {
+                _plateSolveAttempts = value;
                 RaisePropertyChanged();
             }
         }
@@ -82,7 +111,11 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
             this.cameraMediator = cameraMediator;
             this.domeMediator = domeMediator;
             this.domeFollower = domeFollower;
+            this.pluginSettings = new PluginOptionsAccessor(profileService, Guid.Parse(Assembly.GetExecutingAssembly().GetCustomAttribute<System.Runtime.InteropServices.GuidAttribute>().Value));
             MaximumAttemptsToCentre = 4;
+            DisplayPlateSolveDetails = true;
+            PlateSolveAttempts = 5;
+            PlateCloseSolveDelay = 5;
         }
 
         private SolveAddToAlignmentModelAndCentre(SolveAddToAlignmentModelAndCentre cloneMe) : this(cloneMe.profileService,
@@ -97,6 +130,9 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                                                           cloneMe.domeFollower
                                                           ) {
             MaximumAttemptsToCentre = cloneMe.MaximumAttemptsToCentre;
+            DisplayPlateSolveDetails = cloneMe.DisplayPlateSolveDetails;
+            PlateSolveAttempts = cloneMe.PlateSolveAttempts;
+            PlateCloseSolveDelay = cloneMe.PlateCloseSolveDelay;
             CopyMetaData(cloneMe);
         }
 
@@ -116,85 +152,44 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
 
         public override async Task Execute(IProgress<ApplicationStatus> progress, CancellationToken token) {
             AttemptCount = 0;
-            bool centred = true;
-            IWindowService service = windowServiceFactory.Create();
+            bool centred = false;
             Coordinates currentCoordinates = telescopeMediator.GetInfo().Coordinates;
-            progress = PlateSolveStatusVM.CreateLinkedProgress(progress);
-            service.Show(PlateSolveStatusVM, Loc.Instance["Lbl_SequenceItem_Platesolving_SolveAndSync_Name"], System.Windows.ResizeMode.CanResize, System.Windows.WindowStyle.ToolWindow);
-            try {
-                bool isAboveHorizon;
-                do {
-                    AttemptCount++;
-                    isAboveHorizon = ADP_Tools.AboveHorizon(telescopeMediator.GetCurrentPosition(),
-                            profileService.ActiveProfile.AstrometrySettings.Horizon,
-                            profileService.ActiveProfile.AstrometrySettings.Latitude);
-                    if (isAboveHorizon) {
-                        PlateSolveResult result = await DoSolve(progress, token);
-                        if (!result.Success) {
-                            throw new SequenceEntityFailedException(Loc.Instance["LblPlatesolveFailed"]);
-                        } else {
-                            var resultCoordinates = result.Coordinates.Transform(Epoch.JNOW);
-                            string addAlignmentResponse = telescopeMediator.Action("Telescope:AddAlignmentReference", $"{resultCoordinates.RA}:{resultCoordinates.Dec}");
-                            if (Math.Abs(result.Separation.Distance.ArcSeconds) > profileService.ActiveProfile.PlateSolveSettings.Threshold) {
-                                centred = false;
-                                await telescopeMediator.SlewToCoordinatesAsync(currentCoordinates, token);
-                            }
-                        }
-                    } else {
-                        Notification.ShowWarning("Target is below the horizon");
+            ModelPointCreator modelCreator = new ModelPointCreator(
+                cameraMediator,
+                telescopeMediator,
+                rotatorMediator,
+                imagingMediator,
+                filterWheelMediator,
+                plateSolverFactory,
+                windowServiceFactory,
+                profileService);
+
+            bool isAboveHorizon;
+            AttemptCount++;
+            PlateSolveResult result = null;
+            isAboveHorizon = ADP_Tools.AboveMinAlt(telescopeMediator.GetCurrentPosition(),
+                    profileService.ActiveProfile.AstrometrySettings.Horizon,
+                    profileService.ActiveProfile.AstrometrySettings.Latitude,
+                    pluginSettings.GetValueDouble(nameof(AddToAlignmentModel.MinElevationAboveHorizon), 5.0));
+            if (isAboveHorizon) {
+                result = await modelCreator.SolveDirectToMount(PlateSolveAttempts, PlateCloseSolveDelay, progress, token);
+                if (result.Success) {
+                    centred = (Math.Abs(result.Separation.Distance.ArcSeconds) > profileService.ActiveProfile.PlateSolveSettings.Threshold);
+                    while (!centred && AttemptCount <= MaximumAttemptsToCentre && isAboveHorizon) {
+                        await telescopeMediator.Sync(result.Coordinates);
+                        await telescopeMediator.SlewToCoordinatesAsync(currentCoordinates, token);
+                        result = await modelCreator.DoSolve(progress, MaximumAttemptsToCentre, token);
+                        centred = (Math.Abs(result.Separation.Distance.ArcSeconds) <= profileService.ActiveProfile.PlateSolveSettings.Threshold);
                     }
-                } while (!centred && AttemptCount <= MaximumAttemptsToCentre && isAboveHorizon);
-            } finally {
-                service.DelayedClose(TimeSpan.FromSeconds(10));
+                }
             }
+
         }
 
-        protected virtual async Task<PlateSolveResult> DoSolve(IProgress<ApplicationStatus> progress, CancellationToken token) {
-            var plateSolver = plateSolverFactory.GetPlateSolver(profileService.ActiveProfile.PlateSolveSettings);
-            var blindSolver = plateSolverFactory.GetBlindSolver(profileService.ActiveProfile.PlateSolveSettings);
-            var solver = plateSolverFactory.GetCaptureSolver(plateSolver, blindSolver, imagingMediator, filterWheelMediator);
-            var parameter = new CaptureSolverParameter() {
-                Attempts = profileService.ActiveProfile.PlateSolveSettings.NumberOfAttempts,
-                Binning = profileService.ActiveProfile.PlateSolveSettings.Binning,
-                Coordinates = telescopeMediator.GetCurrentPosition(),
-                DownSampleFactor = profileService.ActiveProfile.PlateSolveSettings.DownSampleFactor,
-                FocalLength = profileService.ActiveProfile.TelescopeSettings.FocalLength,
-                MaxObjects = profileService.ActiveProfile.PlateSolveSettings.MaxObjects,
-                PixelSize = profileService.ActiveProfile.CameraSettings.PixelSize,
-                ReattemptDelay = TimeSpan.FromMinutes(profileService.ActiveProfile.PlateSolveSettings.ReattemptDelay),
-                Regions = profileService.ActiveProfile.PlateSolveSettings.Regions,
-                SearchRadius = profileService.ActiveProfile.PlateSolveSettings.SearchRadius,
-                BlindFailoverEnabled = profileService.ActiveProfile.PlateSolveSettings.BlindFailoverEnabled
-            };
-
-            var seq = new CaptureSequence(
-                profileService.ActiveProfile.PlateSolveSettings.ExposureTime,
-                CaptureSequence.ImageTypes.SNAPSHOT,
-                profileService.ActiveProfile.PlateSolveSettings.Filter,
-                new BinningMode(profileService.ActiveProfile.PlateSolveSettings.Binning, profileService.ActiveProfile.PlateSolveSettings.Binning),
-                1
-            );
-            return await solver.Solve(seq, parameter, PlateSolveStatusVM.Progress, progress, token);
-        }
 
         public virtual bool Validate() {
-            var i = new List<string>();
-            var scopeInfo = telescopeMediator.GetInfo();
-            if (!scopeInfo.Connected) {
-                i.Add(Loc.Instance["LblTelescopeNotConnected"]);
-            }
-            if (!Regex.IsMatch(scopeInfo.Name ?? "", "CPWI", RegexOptions.IgnoreCase)) {
-                i.Add("Only works with CPWI scopes");
-            }
-            if (scopeInfo.AlignmentMode != AlignmentMode.AltAz) {
-                i.Add("Only works with AltAz mounts");
-            }
-            if (!cameraMediator.GetInfo().Connected) {
-                i.Add("Camera not connected");
-            }
-
-            Issues = i;
-            return i.Count == 0;
+            Issues = ADP_Tools.ValidateConnections(telescopeMediator.GetInfo(), cameraMediator.GetInfo(), pluginSettings);
+            return Issues.Count == 0;
         }
 
 
