@@ -12,7 +12,7 @@ using System.Runtime.InteropServices;
 // [MANDATORY] The name of your plugin
 [assembly: AssemblyTitle("Add To CPWI Alt-Az Alignment Model")]
 // [MANDATORY] A short description of your plugin
-[assembly: AssemblyDescription("This plugin is designed to work with Celestron AZ mounts connected via CPWI.\nIf it cannot detect a suitable mount then its functions will be disabled.")]
+[assembly: AssemblyDescription("Creates an alignment model in CPWI")]
 
 // The following attributes are not required for the plugin per se, but are required by the official manifest meta data
 
