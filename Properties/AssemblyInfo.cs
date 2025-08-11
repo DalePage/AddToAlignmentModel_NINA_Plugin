@@ -10,9 +10,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyFileVersion("9.0.0.1")]
 
 // [MANDATORY] The name of your plugin
-[assembly: AssemblyTitle("Add To CPWI Alt-Az Alignment Model")]
+[assembly: AssemblyTitle("Add to CPWI Alignment Model")]
 // [MANDATORY] A short description of your plugin
-[assembly: AssemblyDescription("This plug add points to a CPWI alignment model.")]
+[assembly: AssemblyDescription("Create CPWI alignment model")]
 
 // The following attributes are not required for the plugin per se, but are required by the official manifest meta data
 
