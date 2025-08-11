@@ -121,11 +121,11 @@ jobs:
 
       - name: Copy manifest file
         run: |
+          mkdir "./nina.plugin.manifests/manifests/${{ env.PLUGIN_MANIFEST_PATH }}"
           cp "./${{ env.PLUGIN_DLL_NAME }}.${{ github.ref_name }}.manifest.json" "./nina.plugin.manifests/manifests/${{ env.PLUGIN_MANIFEST_PATH }}/manifest.${{ github.ref_name }}.json"
           cd nina.plugin.manifests
-          git pull --rebase https://github.com/isbeorn/nina.plugin.manifests main
           git add .
-          git commit -m "Add manifest for release ${{ github.ref_name }}"
+          git commit -m "Manifest for release ${{ github.ref_name }}"
           git push origin "${{ env.PLUGIN_NAME_SANITIZED }}/${{ github.ref_name }}"
 
 #     - name: Create pull request
