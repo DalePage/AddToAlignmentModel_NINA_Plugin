@@ -79,7 +79,7 @@ namespace ADPUK.NINA.AddToAlignmentModel {
             ActualRAString = result.Coordinates.RAString;
             ActualDec = result.Coordinates.Dec;
             if (result.Separation is null) {
-                Separation = 0d;
+                Separation = Math.Sqrt(Math.Pow((TargetRA - ActualRA), 2) + Math.Pow((TargetDec - ActualDec), 2));
             } else {
                 Separation = result.Separation.Distance.Degree;
             }
@@ -121,7 +121,7 @@ namespace ADPUK.NINA.AddToAlignmentModel {
             ActualRA = result.RA;
             ActualDec = result.Dec;
             if (plateSolveResult.Separation is null) {
-                Separation = 0d;
+                Separation = Math.Sqrt(Math.Pow((TargetRA - ActualRA),2) + Math.Pow((TargetDec - ActualDec), 2));
             } else {
                 Separation = plateSolveResult.Separation.Distance.Degree;
             }
