@@ -6,8 +6,8 @@ using System.Runtime.InteropServices;
 
 // [MANDATORY] The assembly versioning
 //Should be incremented for each new release build of a plugin
-[assembly: AssemblyVersion("0.9.0.3")]
-[assembly: AssemblyFileVersion("0.9.0.3")]
+[assembly: AssemblyVersion("0.9.0.4")]
+[assembly: AssemblyFileVersion("0.9.0.4")]
 
 // [MANDATORY] The name of your plugin
 [assembly: AssemblyTitle("Add to CPWI Alignment Model")]
@@ -38,12 +38,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyMetadata("Homepage", "")]
 
 //[Optional] Common tags that quickly describe your plugin
-[assembly: AssemblyMetadata("Tags", "CPWI")]
-[assembly: AssemblyMetadata("Tags", "Alignment")]
-[assembly: AssemblyMetadata("Tags", "Alt-Az")]
-[assembly: AssemblyMetadata("Tags", "Celestron")]
-[assembly: AssemblyMetadata("Tags", "Alignment Model")]
-[assembly: AssemblyMetadata("Tags", "AltAz")]
+[assembly: AssemblyMetadata("Tags", "CPWI,Alignment,Celestron,AltAz")]
 
 //[Optional] A link that will show a log of all changes in between your plugin's versions
 [assembly: AssemblyMetadata("ChangelogURL", "")]
