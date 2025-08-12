@@ -6,8 +6,8 @@ using System.Runtime.InteropServices;
 
 // [MANDATORY] The assembly versioning
 //Should be incremented for each new release build of a plugin
-[assembly: AssemblyVersion("0.9.0.1")]
-[assembly: AssemblyFileVersion("9.0.0.1")]
+[assembly: AssemblyVersion("0.9.0.2")]
+[assembly: AssemblyFileVersion("9.0.0.2")]
 
 // [MANDATORY] The name of your plugin
 [assembly: AssemblyTitle("Add to CPWI Alignment Model")]
