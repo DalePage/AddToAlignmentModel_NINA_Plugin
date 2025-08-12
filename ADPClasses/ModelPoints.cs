@@ -10,27 +10,54 @@ namespace ADPUK.NINA.AddToAlignmentModel {
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(TargetAltString))]
+        [NotifyPropertyChangedFor(nameof(SeparationString))]
+        [NotifyPropertyChangedFor(nameof(Separation))]
         private double _TargetAlt;
+
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(TargetAzString))]
+        [NotifyPropertyChangedFor(nameof(SeparationString))]
+        [NotifyPropertyChangedFor(nameof(Separation))]
         private double _TargetAz;
+
         [ObservableProperty]
         private string _TargetRAString;
-        [ObservableProperty]
-        private double _TargetRA;
-        [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(TargetDecString))]
-        private double _TargetDec;
-        [ObservableProperty]
-        private string _ActualRAString;
-        [ObservableProperty]
-        private double _ActualRA;
-        [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(ActualDecString))]
-        private double _ActualDec;
+
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(SeparationString))]
-        private double _Separation;
+        [NotifyPropertyChangedFor(nameof(Separation))]
+        private double _TargetRA;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(TargetDecString))]
+        [NotifyPropertyChangedFor(nameof(SeparationString))]
+        [NotifyPropertyChangedFor(nameof(Separation))]
+        private double _TargetDec;
+
+        [ObservableProperty]
+        private string _ActualRAString;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(SeparationString))]
+        [NotifyPropertyChangedFor(nameof(Separation))]
+        private double _ActualRA;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(ActualDecString))]
+        [NotifyPropertyChangedFor(nameof(SeparationString))]
+        [NotifyPropertyChangedFor(nameof(Separation))]
+        private double _ActualDec;
+
+
+
+        public double Separation {
+            get {
+                if ((TargetRA == 0d  && TargetDec == 0d) || (TargetAlt == 0d && TargetAz == 0d)) {
+                    return 0d;
+                }
+                return Math.Sqrt(Math.Pow((TargetRA - ActualRA), 2) + Math.Pow((TargetDec - ActualDec), 2));
+            }
+        }
 
         public string TargetAltString {
             get {
@@ -78,11 +105,6 @@ namespace ADPUK.NINA.AddToAlignmentModel {
             ActualRA = result.Coordinates.RADegrees;
             ActualRAString = result.Coordinates.RAString;
             ActualDec = result.Coordinates.Dec;
-            if (result.Separation is null) {
-                Separation = 0d;
-            } else {
-                Separation = result.Separation.Distance.Degree;
-            }
         }
         public ModelPoint(Coordinates targetCoords) {
             TargetAlt = 0d;
@@ -93,7 +115,6 @@ namespace ADPUK.NINA.AddToAlignmentModel {
             ActualRAString = string.Empty;
             ActualRA = 0d;
             ActualDec = 0d;
-            Separation = 0d;
         }
 
         public ModelPoint(TopocentricCoordinates target) {
@@ -106,7 +127,6 @@ namespace ADPUK.NINA.AddToAlignmentModel {
             ActualRAString = string.Empty;
             ActualRA = 0d;
             ActualDec = 0d;
-            Separation = 0d;
 
         }
         public ModelPoint(TopocentricCoordinates target, PlateSolveResult plateSolveResult) {
@@ -120,11 +140,6 @@ namespace ADPUK.NINA.AddToAlignmentModel {
             ActualRAString = result.RAString;
             ActualRA = result.RA;
             ActualDec = result.Dec;
-            if (plateSolveResult.Separation is null) {
-                Separation = 0d;
-            } else {
-                Separation = plateSolveResult.Separation.Distance.Degree;
-            }
         }
     }
     public class ListModelModelPoints : ObservableCollection<ModelPoint> {

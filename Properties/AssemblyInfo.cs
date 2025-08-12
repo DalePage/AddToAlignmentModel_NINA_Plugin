@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 
 // [MANDATORY] The assembly versioning
 //Should be incremented for each new release build of a plugin
-[assembly: AssemblyVersion("0.9.0.4")]
-[assembly: AssemblyFileVersion("0.9.0.4")]
+[assembly: AssemblyVersion("0.0.0.5")]
+[assembly: AssemblyFileVersion("0.0.0.5")]
 
 // [MANDATORY] The name of your plugin
-[assembly: AssemblyTitle("Add to CPWI Alignment Model")]
+[assembly: AssemblyTitle("Add To CPWI Alignment Model")]
 // [MANDATORY] A short description of your plugin
 [assembly: AssemblyDescription("Create CPWI alignment model")]
 
@@ -19,7 +19,7 @@ using System.Runtime.InteropServices;
 // Your name
 [assembly: AssemblyCompany("ADPUK")]
 // The product name that this plugin is part of
-[assembly: AssemblyProduct("Add To Alignment Model")]
+[assembly: AssemblyProduct("Add To CPWI Alignment Model")]
 [assembly: AssemblyCopyright("Copyright © 2025 ADPUK")]
 
 // The minimum Version of N.I.N.A. that this plugin is compatible with
@@ -38,7 +38,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyMetadata("Homepage", "")]
 
 //[Optional] Common tags that quickly describe your plugin
-[assembly: AssemblyMetadata("Tags", "CPWI,Alignment,Celestron,AltAz")]
+[assembly: AssemblyMetadata("Tags", "CPWI,Alignment,Celestron,AltAz,Alt-Az,Alignement Model")]
 
 //[Optional] A link that will show a log of all changes in between your plugin's versions
 [assembly: AssemblyMetadata("ChangelogURL", "")]

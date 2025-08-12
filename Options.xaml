@@ -7,7 +7,7 @@
     <!--  This data template will be displayed in N.I.N.A. on the options->plugin tab with the datacontext of the TestPlugin instance  -->
     <!--  In order for this datatemplate to be picked correctly, the key has to follow the naming convention of <IPlugin.Name>_Options -->
     <!--  Furthermore the Resource Dictionary has to be exported via code behind export attributes  -->
-    <DataTemplate x:Key="Add To CPWI Alt-Az Alignment Model_Options">
+    <DataTemplate x:Key="Add To CPWI Alignment Model_Options">
         <StackPanel Orientation="Vertical">
             <Grid HorizontalAlignment="Left">
                 <Grid.ColumnDefinitions>
@@ -24,19 +24,19 @@
                     <RowDefinition Height="Auto" />
 
                 </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="{x:Static locale:ViewStrings.NumberOfAzimuthPoints}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="{x:Static locale:ViewStrings.NumberOfAzimuthPoints}" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                 <TextBox MinWidth="30" Grid.Column="1" Text="{Binding NumberOfAzimuthPoints}" HorizontalAlignment="Left" TextAlignment="Center" Margin="5" VerticalAlignment="Center" />
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="{x:Static locale:ViewStrings.NumberOfAltitudePoints}" VerticalAlignment="Center" />
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="{x:Static locale:ViewStrings.NumberOfAltitudePoints}" VerticalAlignment="Center"  HorizontalAlignment="Left"/>
                 <TextBox Grid.Row="1" Grid.Column="1" MinWidth="30" Text="{Binding NumberOfAltitudePoints}" HorizontalAlignment="Left" TextAlignment="Center" Margin="5" VerticalAlignment="Center"/>
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="{x:Static locale:ViewStrings.MinimumElevation}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="{x:Static locale:ViewStrings.MinimumElevation}" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                 <TextBox Grid.Row="2" Grid.Column="1" MinWidth="30" Text="{Binding MinElevation}" HorizontalAlignment="Left" TextAlignment="Center" Margin="5" VerticalAlignment="Center"/>
-                <TextBlock Grid.Row="3" Grid.Column="0" Text="{x:Static locale:ViewStrings.MaximumElevation}" VerticalAlignment="Center" />
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="{x:Static locale:ViewStrings.MaximumElevation}" VerticalAlignment="Center" HorizontalAlignment="Left" />
                 <TextBox Grid.Row="3" Grid.Column="1" MinWidth="30" Text="{Binding MaxElevation}" HorizontalAlignment="Left" TextAlignment="Center" Margin="5" VerticalAlignment="Center"/>
-                <TextBlock Grid.Row="4" Grid.Column="0" Text="{x:Static locale:ViewStrings.SolveAttempts}" VerticalAlignment="Center" />
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="{x:Static locale:ViewStrings.SolveAttempts}" VerticalAlignment="Center" HorizontalAlignment="Left" />
                 <TextBox Grid.Row="4" Grid.Column="1" MinWidth="30" Text="{Binding SolveAttempts}" HorizontalAlignment="Left" TextAlignment="Center" Margin="5" VerticalAlignment="Center" />
-                <TextBlock Grid.Row="5" Grid.Column="0" Text="{x:Static locale:ViewStrings.MinElevationAboveHorizon}" VerticalAlignment="Center" />
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="{x:Static locale:ViewStrings.MinElevationAboveHorizon}" VerticalAlignment="Center" HorizontalAlignment="Left" />
                 <TextBox Grid.Row="5" Grid.Column="1" MinWidth="30" Text="{Binding MinElevationAboveHorizon}" HorizontalAlignment="Left" Margin="5" VerticalAlignment="Center" TextAlignment="Center" />
-                <TextBlock Grid.Row="6" Grid.Column="0" Text="{x:Static locale:ViewStrings.AllowNonAltAzMounts}" VerticalAlignment="Center" Margin="5"/>
+                <TextBlock Grid.Row="6" Grid.Column="0" Text="{x:Static locale:ViewStrings.AllowNonAltAzMounts}" VerticalAlignment="Center" Margin="5" HorizontalAlignment="Left"/>
                 <CheckBox Grid.Row="6" Grid.Column="1" IsChecked="{Binding EnableEquatorialMounts}" VerticalAlignment="Center" HorizontalAlignment="Left" />
             </Grid>
         </StackPanel>
