@@ -20,3 +20,13 @@ I also include sequencer actions to plate solve an image and update the alignmen
 
 The plugin has been developed and tested using CPWI with a Celestron Astro-Fi 6 mount and scope. It is beleived it will 
 work with other CPWI controlled Alt Azimuth mounts but it cannot be guranteed.
+
+## Acknowledgements
+Acknowledgements to the N.I.N.A. team for their work on the N.I.N.A. software and the plugin framework that this plugin is built on.
+Acknowledgements to all the various plugin developers who have provided examples and inspiration for this plugin.
+
+## Disclaimers
+This plugin was developed by Dale Page, ADPUK, and is not affiliated with Celestron or PlaneWave Instruments. Celestron PWI (CPWI) was co-developed by PlaneWave Instruments and Celestron.
+Please check the CPWI support page for any changes or updates to the CPWI software.
+
+This plugin is provided as-is and the author makes no guarantees about its functionality or compatibility with any specific hardware or software configurations. Use at your own risk.
