@@ -1,5 +1,5 @@
 ﻿# Add To Alignment Model for CPWI Alt-Az Mounts
-This plug-in can be used to create, or add to, an alignment model for users of CPWI controlled Alt-Az mounts.
+This plugin can be used to create, or add to, an alignment model for users of CPWI controlled Alt-Az mounts.
 
 ## Why?
 The plugin came about due to eye health challenges making it very difficult to use the red dot finder to pick alignment

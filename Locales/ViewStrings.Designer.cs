@@ -97,11 +97,11 @@ namespace ADPUK.NINA.AddToAlignmentModel.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Alignment Model.
+        ///   Looks up a localized string similar to Create or Add to Alignment Model.
         /// </summary>
-        public static string AlignmentModel {
+        public static string AlignmentModelTitle {
             get {
-                return ResourceManager.GetString("AlignmentModel", resourceCulture);
+                return ResourceManager.GetString("AlignmentModelTitle", resourceCulture);
             }
         }
         

@@ -19,7 +19,7 @@
                     <Setter Property="Padding" Value="15,5,15,5" />
                 </Style>
             </StackPanel.Resources>
-            <TextBlock Text="{x:Static locales:ViewStrings.AlignmentModel}" TextAlignment="Center" Margin="10,10,10,10" FontWeight="DemiBold" FontSize="20"/>
+            <TextBlock Text="{x:Static locales:ViewStrings.AlignmentModelTitle}" TextAlignment="Center" Margin="10,10,10,10" FontWeight="DemiBold" FontSize="20"/>
             <Grid Margin="10" HorizontalAlignment="Center" >
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />

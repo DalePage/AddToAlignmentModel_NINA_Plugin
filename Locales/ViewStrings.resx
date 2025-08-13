@@ -210,8 +210,8 @@
   <data name="MaxCentreAttempts" xml:space="preserve">
     <value>Maximum number of attempts to centre</value>
   </data>
-  <data name="AlignmentModel" xml:space="preserve">
-    <value>Alignment Model</value>
+  <data name="AlignmentModelTitle" xml:space="preserve">
+    <value>Create or Add to Alignment Model</value>
   </data>
   <data name="PlateSolveFailed" xml:space="preserve">
     <value>Plate Solve Failed</value>
