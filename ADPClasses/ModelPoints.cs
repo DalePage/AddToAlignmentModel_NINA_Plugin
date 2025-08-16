@@ -61,7 +61,7 @@ namespace ADPUK.NINA.AddToAlignmentModel {
 
         public string TargetAltString {
             get {
-                if (TargetAlt == 0d) {
+                if (TargetAlt == 0d && TargetAz == 0d) {
                     return "*";
                 }
                 return AstroUtil.DegreesToDMS(TargetAlt);
@@ -73,7 +73,7 @@ namespace ADPUK.NINA.AddToAlignmentModel {
         }
         public string TargetAzString {
             get {
-                if (TargetAz == 0d) {
+                if (TargetAz == 0d && TargetAlt == 0d) {
                     return "*";
                 }
                 return AstroUtil.DegreesToDMS(TargetAz);

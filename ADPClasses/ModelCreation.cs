@@ -62,8 +62,8 @@ namespace ADPUK.NINA.AddToAlignmentModel {
             bool showDialog = true) {
 
             try {
+                service = windowServiceFactory.Create();
                 if (showDialog) {
-                    service = windowServiceFactory.Create();
                     service.Show(PlateSolveStatusVM, Loc.Instance["Lbl_SequenceItem_Platesolving_SolveAndSync_Name"], System.Windows.ResizeMode.CanResize, System.Windows.WindowStyle.ToolWindow);
                 }
 
@@ -81,12 +81,12 @@ namespace ADPUK.NINA.AddToAlignmentModel {
         public async Task<ModelPoint> GetCurrentLocation(int solveAttempts, int plateSolveCloseDelay, IProgress<ApplicationStatus> progress, CancellationToken token, bool showDialog = true) {
             Coordinates currentPostion = telescopeMediator.GetCurrentPosition();
             progress = PlateSolveStatusVM.CreateLinkedProgress(progress);
+            service = windowServiceFactory.Create();
             if (showDialog) {
-                    service = windowServiceFactory.Create();
-                    service.Show(PlateSolveStatusVM, Loc.Instance["Lbl_SequenceItem_Platesolving_SolveAndSync_Name"], System.Windows.ResizeMode.CanResize, System.Windows.WindowStyle.ToolWindow);
+                service.Show(PlateSolveStatusVM, Loc.Instance["Lbl_SequenceItem_Platesolving_SolveAndSync_Name"], System.Windows.ResizeMode.CanResize, System.Windows.WindowStyle.ToolWindow);
             }
             PlateSolveResult result = await DoSolve(progress, solveAttempts, token);
-            service.DelayedClose(new TimeSpan(0,0, plateSolveCloseDelay));
+            service.DelayedClose(new TimeSpan(0, 0, plateSolveCloseDelay));
             if (!result.Success) {
                 ModelPoint modelPoint = new ModelPoint() {
                     ActualRAString = ViewStrings.PlateSolveFailed
@@ -98,7 +98,7 @@ namespace ADPUK.NINA.AddToAlignmentModel {
             } else {
                 Coordinates resultCoordinates = result.Coordinates.Transform(Epoch.JNOW);
                 string addAlignmentResponse = telescopeMediator.Action("Telescope:AddAlignmentReference", $"{resultCoordinates.RA}:{resultCoordinates.Dec}");
-                return  new ModelPoint(currentPostion , result);
+                return new ModelPoint(currentPostion, result);
             }
         }
         public async Task<ModelPoint> CreateModelPoint(ModelCreationParameters creationParameters, IProgress<ApplicationStatus> progress, CancellationToken token, bool showDialog = true) {
@@ -106,19 +106,18 @@ namespace ADPUK.NINA.AddToAlignmentModel {
             progress = PlateSolveStatusVM.CreateLinkedProgress(progress);
             Coordinates target = creationParameters.TargetCoordinatesAltAz.Transform(Epoch.JNOW);
             try {
+                service = windowServiceFactory.Create();
                 if (ADP_Tools.AboveMinAlt(
-                        creationParameters.TargetCoordinatesAltAz,
-                        profileService.ActiveProfile.AstrometrySettings.Horizon,
-                        creationParameters.MinElevationAboveHorizon)) {
+                         creationParameters.TargetCoordinatesAltAz,
+                         profileService.ActiveProfile.AstrometrySettings.Horizon,
+                         creationParameters.MinElevationAboveHorizon)) {
 
                     await telescopeMediator.SlewToCoordinatesAsync(target, token);
                     if (cameraMediator.GetInfo().Connected) {
                         if (showDialog) {
-                            service = windowServiceFactory.Create();
                             service.Show(PlateSolveStatusVM, Loc.Instance["Lbl_SequenceItem_Platesolving_SolveAndSync_Name"], System.Windows.ResizeMode.CanResize, System.Windows.WindowStyle.ToolWindow);
                         }
                         PlateSolveResult result = await DoSolve(progress, creationParameters.SolveAttempts, token);
-                        if (showDialog) { service.DelayedClose(new TimeSpan(0, 0, creationParameters.PlateSolveCloseDelay)); }
                         if (!result.Success) {
                             modelPoint.ActualRAString = ViewStrings.PlateSolveFailed;
                             Notification.ShowWarning($"{ViewStrings.PlateSolveFailedAt.Replace("{{Azimuth}}",
