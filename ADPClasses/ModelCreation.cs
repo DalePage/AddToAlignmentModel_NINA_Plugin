@@ -55,6 +55,7 @@ namespace ADPUK.NINA.AddToAlignmentModel {
         }
 
         public async Task<PlateSolveResult> SolveDirectToMount(
+            Coordinates expectedCentre,
             int solveAttempts,
             int plateSolveCloseDelay,
             IProgress<ApplicationStatus> progress,
@@ -67,7 +68,7 @@ namespace ADPUK.NINA.AddToAlignmentModel {
                     service.Show(PlateSolveStatusVM, Loc.Instance["Lbl_SequenceItem_Platesolving_SolveAndSync_Name"], System.Windows.ResizeMode.CanResize, System.Windows.WindowStyle.ToolWindow);
                 }
 
-                PlateSolveResult result = await DoSolve(progress, solveAttempts, token);
+                PlateSolveResult result = await DoSolve(expectedCentre, progress, solveAttempts, token);
                 if (result.Success) {
                     telescopeMediator.Action("Telescope:AddAlignmentReference", $"{result.Coordinates.RA}:{result.Coordinates.Dec}");
                 }
@@ -79,26 +80,26 @@ namespace ADPUK.NINA.AddToAlignmentModel {
         }
 
         public async Task<ModelPoint> GetCurrentLocation(int solveAttempts, int plateSolveCloseDelay, IProgress<ApplicationStatus> progress, CancellationToken token, bool showDialog = true) {
-            Coordinates currentPostion = telescopeMediator.GetCurrentPosition();
+            Coordinates currentPosition = telescopeMediator.GetCurrentPosition();
             progress = PlateSolveStatusVM.CreateLinkedProgress(progress);
             service = windowServiceFactory.Create();
             if (showDialog) {
                 service.Show(PlateSolveStatusVM, Loc.Instance["Lbl_SequenceItem_Platesolving_SolveAndSync_Name"], System.Windows.ResizeMode.CanResize, System.Windows.WindowStyle.ToolWindow);
             }
-            PlateSolveResult result = await DoSolve(progress, solveAttempts, token);
+            PlateSolveResult result = await DoSolve(currentPosition, progress, solveAttempts, token);
             service.DelayedClose(new TimeSpan(0, 0, plateSolveCloseDelay));
             if (!result.Success) {
                 ModelPoint modelPoint = new ModelPoint() {
                     ActualRAString = ViewStrings.PlateSolveFailed
                 };
                 Notification.ShowWarning($"{ViewStrings.PlateSolveFailedRADec.Replace("{{RA}}",
-                    currentPostion.RAString).Replace("{{Dec}}}",
-                    currentPostion.DecString)}");
+                    currentPosition.RAString).Replace("{{Dec}}}",
+                    currentPosition.DecString)}");
                 return modelPoint;
             } else {
                 Coordinates resultCoordinates = result.Coordinates.Transform(Epoch.JNOW);
                 string addAlignmentResponse = telescopeMediator.Action("Telescope:AddAlignmentReference", $"{resultCoordinates.RA}:{resultCoordinates.Dec}");
-                return new ModelPoint(currentPostion, result);
+                return new ModelPoint(currentPosition, result);
             }
         }
         public async Task<ModelPoint> CreateModelPoint(ModelCreationParameters creationParameters, IProgress<ApplicationStatus> progress, CancellationToken token, bool showDialog = true) {
@@ -117,7 +118,7 @@ namespace ADPUK.NINA.AddToAlignmentModel {
                         if (showDialog) {
                             service.Show(PlateSolveStatusVM, Loc.Instance["Lbl_SequenceItem_Platesolving_SolveAndSync_Name"], System.Windows.ResizeMode.CanResize, System.Windows.WindowStyle.ToolWindow);
                         }
-                        PlateSolveResult result = await DoSolve(progress, creationParameters.SolveAttempts, token);
+                        PlateSolveResult result = await DoSolve(target, progress, creationParameters.SolveAttempts, token);
                         if (!result.Success) {
                             modelPoint.ActualRAString = ViewStrings.PlateSolveFailed;
                             Notification.ShowWarning($"{ViewStrings.PlateSolveFailedAt.Replace("{{Azimuth}}",
@@ -148,13 +149,13 @@ namespace ADPUK.NINA.AddToAlignmentModel {
         }
 
 
-        public virtual async Task<PlateSolveResult> DoSolve(IProgress<ApplicationStatus> progress, int solveAttempts, CancellationToken token) {
+        public virtual async Task<PlateSolveResult> DoSolve(Coordinates expectedCentre, IProgress<ApplicationStatus> progress, int solveAttempts, CancellationToken token) {
             IPlateSolver plateSolver = plateSolverFactory.GetPlateSolver(profileService.ActiveProfile.PlateSolveSettings);
             IPlateSolver blindSolver = plateSolverFactory.GetBlindSolver(profileService.ActiveProfile.PlateSolveSettings);
 
             ICaptureSolver solver = plateSolverFactory.GetCaptureSolver(plateSolver, blindSolver, imagingMediator, filterWheelMediator);
 
-            CaptureSolverParameter parameter = ADP_Tools.CreateCaptureSolverParameter(profileService.ActiveProfile, telescopeMediator.GetCurrentPosition(), solveAttempts);
+            CaptureSolverParameter parameter = ADP_Tools.CreateCaptureSolverParameter(profileService.ActiveProfile, expectedCentre, solveAttempts);
 
             CaptureSequence seq = new CaptureSequence(
                 profileService.ActiveProfile.PlateSolveSettings.ExposureTime,

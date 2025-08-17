@@ -1,6 +1,8 @@
 ﻿using Newtonsoft.Json;
+using NINA.Astrometry;
 using NINA.Core.Model;
 using NINA.Core.Utility.WindowService;
+using NINA.Equipment.Equipment.MyTelescope;
 using NINA.Equipment.Interfaces.Mediator;
 using NINA.PlateSolving.Interfaces;
 using NINA.Plugin.Interfaces;
@@ -16,6 +18,7 @@ using System.Reflection;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.ObjectModel;
 
 namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
     [ExportMetadata("Name", "Create Alignement Model")]
@@ -45,6 +48,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         private ModelPointCreator.ModelCreationParameters modelCreationParameters;
         private bool _displayPlateSolveDetails;
         private int _plateSolveCloseDelay;
+        public ObservableCollection<ModelPoint> ModelPoints { get; } = new ObservableCollection<ModelPoint>();
 
         public bool IsReadOnly {
             get { return _isReadOnly; }
@@ -75,7 +79,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         public bool DisplayPlateSolveDetails {
             get {
 
-                return _displayPlateSolveDetails ;
+                return _displayPlateSolveDetails;
             }
             set {
                 _displayPlateSolveDetails = value;
@@ -201,6 +205,11 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         }
 
         public override async Task Execute(IProgress<ApplicationStatus> progress, CancellationToken token) {
+            TelescopeInfo telescopeInfo = telescopeMediator.GetInfo();
+            TopocentricCoordinates altAzTarget;
+            double initialAzimuth = ADP_Tools.ReadyToStart(telescopeInfo);
+            double targetAz = initialAzimuth;
+            double nextAz = initialAzimuth;
             StepCount = 0;
             IsReadOnly = true;
             try {
@@ -215,15 +224,29 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                     windowServiceFactory,
                     profileService);
 
-                int azCount = 0;
-                while (azCount < NumberOfAzimuthPoints) {
-                    if (token.IsCancellationRequested) break;
+                modelCreationParameters = new ModelPointCreator.ModelCreationParameters {
+                    NumberOfAzimuthPoints = NumberOfAzimuthPoints,
+                    NumberOfAltitudePoints = NumberOfAltitudePoints,
+                    MaxElevation = MaxElevation,
+                    MinElevation = MinElevation,
+                    SolveAttempts = SolveAttempts,
+                    PlateSolveCloseDelay = PlateSolveCloseDelay
+                };
+                for (int azc = 1; azc <= NumberOfAzimuthPoints; azc++) {
+                    targetAz = nextAz < 360.0 ? nextAz : nextAz - 360.0;
                     for (double nextAlt = MinElevation; nextAlt <= MaxElevation; nextAlt += modelCreationParameters.AltStepSize) {
-                        await modelCreator.SolveDirectToMount(SolveAttempts, PlateSolveCloseDelay, progress, token);
+                        altAzTarget = new TopocentricCoordinates(
+                            Angle.ByDegree(targetAz),
+                            Angle.ByDegree(nextAlt),
+                            Angle.ByDegree(telescopeInfo.SiteLatitude),
+                            Angle.ByDegree(telescopeInfo.SiteLongitude)
+                            );
+                        modelCreationParameters.TargetCoordinatesAltAz = altAzTarget;
+                        ModelPoint modelPoint = await modelCreator.CreateModelPoint(modelCreationParameters, progress, token);
+                        ModelPoints.Add(modelPoint);
                         StepCount++;
-
                     }
-                    azCount++;
+                    nextAz += modelCreationParameters.AzStepSize;
                 }
             } finally {
                 IsReadOnly = false;

@@ -167,19 +167,20 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
             bool isAboveHorizon;
             AttemptCount++;
             PlateSolveResult result = null;
-            isAboveHorizon = ADP_Tools.AboveMinAlt(telescopeMediator.GetCurrentPosition(),
+            Coordinates currentPosition = telescopeMediator.GetCurrentPosition();
+            isAboveHorizon = ADP_Tools.AboveMinAlt(currentPosition,
                     profileService.ActiveProfile.AstrometrySettings.Horizon,
                     profileService.ActiveProfile.AstrometrySettings.Latitude,
                     pluginSettings.GetValueDouble(nameof(AddToAlignmentModel.MinElevationAboveHorizon), 5.0));
             if (isAboveHorizon) {
-                result = await modelCreator.SolveDirectToMount(PlateSolveAttempts, PlateCloseSolveDelay, progress, token);
+                result = await modelCreator.SolveDirectToMount(currentPosition, PlateSolveAttempts, PlateCloseSolveDelay, progress, token);
                 if (result.Success) {
-                    centred = (Math.Abs(result.Separation.Distance.ArcSeconds) > profileService.ActiveProfile.PlateSolveSettings.Threshold);
+                    centred = ((currentCoordinates - result.Coordinates).Distance.Degree < profileService.ActiveProfile.PlateSolveSettings.Threshold);
                     while (!centred && AttemptCount <= MaximumAttemptsToCentre && isAboveHorizon) {
                         await telescopeMediator.Sync(result.Coordinates);
                         await telescopeMediator.SlewToCoordinatesAsync(currentCoordinates, token);
-                        result = await modelCreator.DoSolve(progress, MaximumAttemptsToCentre, token);
-                        centred = (Math.Abs(result.Separation.Distance.ArcSeconds) <= profileService.ActiveProfile.PlateSolveSettings.Threshold);
+                        result = await modelCreator.DoSolve(currentCoordinates, progress, MaximumAttemptsToCentre, token);
+                        centred = ((currentCoordinates - result.Coordinates).Distance.Degree < profileService.ActiveProfile.PlateSolveSettings.Threshold);
                     }
                 }
             }

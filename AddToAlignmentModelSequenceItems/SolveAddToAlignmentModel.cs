@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using NINA.Astrometry;
 using NINA.Core.Model;
 using NINA.Core.Utility.WindowService;
 using NINA.Equipment.Interfaces.Mediator;
@@ -31,7 +32,6 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
         private IPlateSolverFactory plateSolverFactory;
         private IWindowServiceFactory windowServiceFactory;
         private ICameraMediator cameraMediator;
-        private int _maximumAttempts;
         private bool _displayPlateSolveDetails;
         private int _plateSolveAttempts;
         private int _plateSolveCloseDelay;
@@ -133,8 +133,8 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                     plateSolverFactory,
                     windowServiceFactory,
                     profileService);
-
-                await modelCreator.SolveDirectToMount(PlateSolveAttempts, PlateSolveCloseDelay, progress, token);
+                Coordinates coordinates = telescopeMediator.GetCurrentPosition();
+                await modelCreator.SolveDirectToMount(coordinates, PlateSolveAttempts, PlateSolveCloseDelay, progress, token);
             } finally {
             }
         }
