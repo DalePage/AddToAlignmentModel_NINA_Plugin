@@ -19,6 +19,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.ObjectModel;
+using NINA.Core.Utility;
 
 namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
     [ExportMetadata("Name", "Create Alignement Model")]
@@ -206,7 +207,7 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
 
         public override async Task Execute(IProgress<ApplicationStatus> progress, CancellationToken token) {
             TelescopeInfo telescopeInfo = telescopeMediator.GetInfo();
-            TopocentricCoordinates altAzTarget;
+            Coordinates target;
             double initialAzimuth = ADP_Tools.ReadyToStart(telescopeInfo);
             double targetAz = initialAzimuth;
             double nextAz = initialAzimuth;
@@ -235,13 +236,15 @@ namespace ADPUK.NINA.AddToAlignmentModel.AddToAlignmentModelSequenceItems {
                 for (int azc = 1; azc <= NumberOfAzimuthPoints; azc++) {
                     targetAz = nextAz < 360.0 ? nextAz : nextAz - 360.0;
                     for (double nextAlt = MinElevation; nextAlt <= MaxElevation; nextAlt += modelCreationParameters.AltStepSize) {
-                        altAzTarget = new TopocentricCoordinates(
+                        target = new TopocentricCoordinates(
                             Angle.ByDegree(targetAz),
                             Angle.ByDegree(nextAlt),
                             Angle.ByDegree(telescopeInfo.SiteLatitude),
-                            Angle.ByDegree(telescopeInfo.SiteLongitude)
-                            );
-                        modelCreationParameters.TargetCoordinatesAltAz = altAzTarget;
+                            Angle.ByDegree(telescopeInfo.SiteLongitude),
+                            telescopeInfo.SiteElevation,
+                            new SystemDateTime()
+                            ).Transform(telescopeInfo.EquatorialSystem);
+                        modelCreationParameters.TargetCoordinates = target;
                         ModelPoint modelPoint = await modelCreator.CreateModelPoint(modelCreationParameters, progress, token);
                         ModelPoints.Add(modelPoint);
                         StepCount++;

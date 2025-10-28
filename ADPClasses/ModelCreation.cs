@@ -5,12 +5,15 @@ using NINA.Astrometry;
 using NINA.Core.Locale;
 using NINA.Core.Model;
 using NINA.Core.Model.Equipment;
+using NINA.Core.Utility;
 using NINA.Core.Utility.Notification;
 using NINA.Core.Utility.WindowService;
+using NINA.Equipment.Equipment.MyTelescope;
 using NINA.Equipment.Interfaces.Mediator;
 using NINA.Equipment.Model;
 using NINA.PlateSolving;
 using NINA.PlateSolving.Interfaces;
+using NINA.Profile;
 using NINA.Profile.Interfaces;
 using NINA.WPF.Base.ViewModel;
 using System;
@@ -33,6 +36,8 @@ namespace ADPUK.NINA.AddToAlignmentModel {
         private IWindowService service;
 
 
+
+        private DeviceUpdateTimer updateTimer;
 
         public ModelPointCreator(
             ICameraMediator cameraMediator,
@@ -83,34 +88,37 @@ namespace ADPUK.NINA.AddToAlignmentModel {
             Coordinates currentPosition = telescopeMediator.GetCurrentPosition();
             progress = PlateSolveStatusVM.CreateLinkedProgress(progress);
             service = windowServiceFactory.Create();
+            ModelPoint modelPoint = new ModelPoint(currentPosition, null, telescopeMediator.GetInfo().EquatorialSystem);
             if (showDialog) {
                 service.Show(PlateSolveStatusVM, Loc.Instance["Lbl_SequenceItem_Platesolving_SolveAndSync_Name"], System.Windows.ResizeMode.CanResize, System.Windows.WindowStyle.ToolWindow);
             }
             PlateSolveResult result = await DoSolve(currentPosition, progress, solveAttempts, token);
             service.DelayedClose(new TimeSpan(0, 0, plateSolveCloseDelay));
             if (!result.Success) {
-                ModelPoint modelPoint = new ModelPoint() {
-                    ActualRAString = ViewStrings.PlateSolveFailed
-                };
+                modelPoint.Status = ViewStrings.PlateSolveFailed;
                 Notification.ShowWarning($"{ViewStrings.PlateSolveFailedRADec.Replace("{{RA}}",
                     currentPosition.RAString).Replace("{{Dec}}}",
                     currentPosition.DecString)}");
                 return modelPoint;
             } else {
-                Coordinates resultCoordinates = result.Coordinates.Transform(Epoch.JNOW);
-                string addAlignmentResponse = telescopeMediator.Action("Telescope:AddAlignmentReference", $"{resultCoordinates.RA}:{resultCoordinates.Dec}");
-                return new ModelPoint(currentPosition, result);
+                Coordinates resultCoordinates = result.Coordinates.Transform(telescopeMediator.GetInfo().EquatorialSystem);
+                string addAlignmentResponse = telescopeMediator.Action("Telescope:AddAlignmentReference", $"{resultCoordinates}");
+                modelPoint.Status = "OK";
+                modelPoint.ActualCoordinates = resultCoordinates;
+                return modelPoint;
             }
         }
         public async Task<ModelPoint> CreateModelPoint(ModelCreationParameters creationParameters, IProgress<ApplicationStatus> progress, CancellationToken token, bool showDialog = true) {
-            ModelPoint modelPoint = new ModelPoint(creationParameters.TargetCoordinatesAltAz);
+            ModelPoint modelPoint = new ModelPoint(creationParameters.TargetCoordinates, null, telescopeMediator.GetInfo().EquatorialSystem);
             progress = PlateSolveStatusVM.CreateLinkedProgress(progress);
-            Coordinates target = creationParameters.TargetCoordinatesAltAz.Transform(Epoch.JNOW);
+            Coordinates target = creationParameters.TargetCoordinates.Transform(telescopeMediator.GetInfo().EquatorialSystem);
+            var scopeInfo = telescopeMediator.GetInfo();
             try {
                 service = windowServiceFactory.Create();
                 if (ADP_Tools.AboveMinAlt(
-                         creationParameters.TargetCoordinatesAltAz,
+                         creationParameters.TargetCoordinates,
                          profileService.ActiveProfile.AstrometrySettings.Horizon,
+                         telescopeMediator.GetInfo().SiteLatitude,
                          creationParameters.MinElevationAboveHorizon)) {
 
                     await telescopeMediator.SlewToCoordinatesAsync(target, token);
@@ -119,28 +127,34 @@ namespace ADPUK.NINA.AddToAlignmentModel {
                             service.Show(PlateSolveStatusVM, Loc.Instance["Lbl_SequenceItem_Platesolving_SolveAndSync_Name"], System.Windows.ResizeMode.CanResize, System.Windows.WindowStyle.ToolWindow);
                         }
                         PlateSolveResult result = await DoSolve(target, progress, creationParameters.SolveAttempts, token);
+                        var topoCoords = creationParameters.TargetCoordinates.Transform(
+                            Angle.ByDegree(scopeInfo.SiteLatitude),
+                            Angle.ByDegree(scopeInfo.SiteLongitude),
+                            scopeInfo.SiteElevation);
                         if (!result.Success) {
-                            modelPoint.ActualRAString = ViewStrings.PlateSolveFailed;
+                            modelPoint.Status = ViewStrings.PlateSolveFailed;
                             Notification.ShowWarning($"{ViewStrings.PlateSolveFailedAt.Replace("{{Azimuth}}",
-                                creationParameters.TargetCoordinatesAltAz.Azimuth.ToString()).Replace("{{Altitude}}}",
-                                creationParameters.TargetCoordinatesAltAz.Altitude.ToString())}");
+                                AstroUtil.DegreesToHMS(topoCoords.Azimuth.Degree)).Replace("{{Altitude}}}",
+                                AstroUtil.DegreesToDMS(topoCoords.Altitude.Degree))}");
                             return modelPoint;
                         } else {
-                            Coordinates resultCoordinates = result.Coordinates.Transform(Epoch.JNOW);
+                            Coordinates resultCoordinates = result.Coordinates.Transform(telescopeMediator.GetInfo().EquatorialSystem);
                             string addAlignmentResponse = telescopeMediator.Action("Telescope:AddAlignmentReference", $"{resultCoordinates.RA}:{resultCoordinates.Dec}");
-                            modelPoint = new ModelPoint(creationParameters.TargetCoordinatesAltAz, result);
+                            TimeSpan waitTime = TimeSpan.FromSeconds(profileService.ActiveProfile.ApplicationSettings.DevicePollingInterval);
+                            await Task.Delay(waitTime, token);
+                            modelPoint.Status = "OK";
+                            modelPoint.ActualCoordinates = resultCoordinates;
                             return modelPoint;
                         }
                     } else {
-                        modelPoint.ActualRAString = Loc.Instance["Lbl_CameraNotConnected"];
+                        modelPoint.Status = Loc.Instance["Lbl_CameraNotConnected"];
                         Notification.ShowWarning(Loc.Instance["Lbl_CameraNotConnected"]);
                         return modelPoint;
                     }
                 } else {
                     Notification.ShowWarning($"{ViewStrings.TargetBelowHorizon
-                        .Replace("{{Azimuth}}", creationParameters.TargetCoordinatesAltAz.Azimuth.ToString())
-                        .Replace("{{Altitude}}", creationParameters.TargetCoordinatesAltAz.Altitude.ToString())}");
-                    modelPoint.ActualRAString = ViewStrings.TargetBelowHorizon;
+                        .Replace("{{Azimuth}}", AstroUtil.DegreesToHMS(creationParameters.TargetCoordinates.Transform(Angle.ByDegree(scopeInfo.SiteLatitude), Angle.ByDegree(scopeInfo.SiteLongitude)).Azimuth.Degree))
+                        .Replace("{{Altitude}}", AstroUtil.DegreesToDMS(creationParameters.TargetCoordinates.Transform(Angle.ByDegree(scopeInfo.SiteLatitude), Angle.ByDegree(scopeInfo.SiteLongitude)).Altitude.Degree))}");
                     return modelPoint;
                 }
             } finally {
@@ -190,7 +204,7 @@ namespace ADPUK.NINA.AddToAlignmentModel {
             [JsonProperty("PlateSolveDelay")]
             private int _PlateSolveCloseDelay;
             [JsonIgnore]
-            public TopocentricCoordinates TargetCoordinatesAltAz;
+            public Coordinates TargetCoordinates;
             [JsonIgnore]
             public double AltStepSize {
                 get {
