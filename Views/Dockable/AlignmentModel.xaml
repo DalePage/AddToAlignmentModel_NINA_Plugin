@@ -130,13 +130,12 @@
                 >
 
                 <DataGrid.Columns>
-                    <DataGridTextColumn CellStyle="{StaticResource LocalDataGridCellStyle}" Header="{x:Static locales:ViewStrings.TargetAz}"  Binding="{Binding TargetAzString}"  />
-                    <DataGridTextColumn CellStyle="{StaticResource LocalDataGridCellStyle}" Header="{x:Static locales:ViewStrings.TargetAlt}" Binding="{Binding TargetAltString}" />
-                    <DataGridTextColumn CellStyle="{StaticResource LocalDataGridCellStyle}" Header="{x:Static locales:ViewStrings.TargetRA}"  Binding="{Binding TargetRAString}" />
+                    <DataGridTextColumn CellStyle="{StaticResource LocalDataGridCellStyle}" Header="{x:Static locales:ViewStrings.TargetRA}"  Binding="{Binding TargetRAString}"/>
                     <DataGridTextColumn CellStyle="{StaticResource LocalDataGridCellStyle}" Header="{x:Static locales:ViewStrings.TargetDec}"  Binding="{Binding TargetDecString}"/>
                     <DataGridTextColumn CellStyle="{StaticResource LocalDataGridCellStyle}" Header="{x:Static locales:ViewStrings.ActualRA}"  Binding="{Binding ActualRAString}" />
                     <DataGridTextColumn CellStyle="{StaticResource LocalDataGridCellStyle}" Header="{x:Static locales:ViewStrings.ActualDec}"  Binding="{Binding ActualDecString}"/>
                     <DataGridTextColumn CellStyle="{StaticResource LocalDataGridCellStyle}" Header="{x:Static locales:ViewStrings.Separation}" Binding="{Binding SeparationString}" />
+                    <DataGridTextColumn CellStyle="{StaticResource LocalDataGridCellStyle}" Header="Status" Binding="{Binding Status}" />
                 </DataGrid.Columns>
 
             </DataGrid>

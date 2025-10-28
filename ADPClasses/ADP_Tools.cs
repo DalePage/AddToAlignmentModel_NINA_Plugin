@@ -32,12 +32,15 @@ namespace ADPUK.NINA.AddToAlignmentModel {
             if (!scopeInfo.Connected) {
                 i.Add($"{Loc.Instance["LblTelescopeNotConnected"]}");
             }
+#if !DEBUG
             if (!Regex.IsMatch(scopeInfo.Name ?? "", "CPWI", RegexOptions.IgnoreCase)) {
                 i.Add(ViewStrings.RequireCPWI);
             }
             if (scopeInfo.AlignmentMode != AlignmentMode.AltAz && !pluginSettings.GetValueBoolean(nameof(AddToAlignmentModel.EnableEquatorialMounts), false)) {
                 i.Add(ViewStrings.AltAzOnly);
             }
+ #endif
+
             if (!cameraInfo.Connected) {
                 i.Add(Loc.Instance["LblCameraNotConnected"]);
             }
