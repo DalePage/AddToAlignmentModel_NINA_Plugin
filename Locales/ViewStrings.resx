@@ -151,7 +151,7 @@
     <value>Solve Attempts</value>
   </data>
   <data name="AllowNonAltAzMounts" xml:space="preserve">
-    <value>Allow use with mounts other than Alt-Az. - EXPERIMENTAL USE WITH CARE</value>
+    <value>Allow use with mounts other than Alt-Az</value>
   </data>
   <data name="NorthNotConfirmed" xml:space="preserve">
     <value>Scope pre-alignment to northern horizon not confirmed</value>

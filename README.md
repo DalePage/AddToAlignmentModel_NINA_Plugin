@@ -1,9 +1,10 @@
-﻿# Add To Alignment Model for CPWI Alt-Az Mounts
-This plugin can be used to create, or add to, an alignment model for users of CPWI controlled Alt-Az mounts.
+﻿# Add To Alignment Model for CPWI Alt-Az Mounts and (after limited testing CPWI Equatorial Mounts
+This plugin can be used to create, or add to, an alignment model for users of CPWI controlled mounts. The author has tested using a Celestron Astro-Fi 6 mount and scope. 
+Other users have also reported success with CPWI contolled EQ mounts, namely a CGX.
 
 ## Why?
-The plugin came about due to eye health challenges making it very difficult to use the red dot finder to pick alignment
-stars for centring in an eye piece or image. Using this plugin makes it possible to generate an alignment model within
+The plugin came about due to eye health challenges making it very difficult to use the red dot finder, or even an eye piece, to pick alignment
+stars and centre them. Using this plugin makes it possible to generate an alignment model within
 CPWI without any visual observing. 
 
 Having a good alignment model improves mount tracking greatly reducing the number of recentreing actions after plate solving
@@ -19,7 +20,7 @@ cordinates and an image obtained and plate solved to obtain the actual RA/Dec wh
 I also include sequencer actions to plate solve an image and update the alignment model. Potentially these could be called from a trigger but I have not yet had time to create a dedicated trigger.
 
 The plugin has been developed and tested using CPWI with a Celestron Astro-Fi 6 mount and scope. It is beleived it will 
-work with other CPWI controlled Alt Azimuth mounts but it cannot be guranteed.
+work with other CPWI controlled Alt Azimuth mounts and Equatorial mounts but it cannot be guranteed.
 
 ## Acknowledgements
 Acknowledgements to the N.I.N.A. team for their work on the N.I.N.A. software and the plugin framework that this plugin is built on.
